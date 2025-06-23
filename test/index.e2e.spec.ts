@@ -5,44 +5,44 @@
 import { main } from '../src/index';
 
 describe('Main Application (E2E)', () => {
-  let consoleSpy: jest.SpyInstance;
+    let consoleSpy: jest.SpyInstance;
 
-  beforeEach(() => {
-    consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-  });
+    beforeEach(() => {
+        consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    });
 
-  afterEach(() => {
-    consoleSpy.mockRestore();
-  });
+    afterEach(() => {
+        consoleSpy.mockRestore();
+    });
 
-  it('should run the main application without errors', async () => {
-    await expect(main()).resolves.toBeUndefined();
-  });
+    it('should run the main application without errors', async () => {
+        await expect(main()).resolves.toBeUndefined();
+    });
 
-  it('should log startup and completion messages', async () => {
-    await main();
+    it('should log startup and completion messages', async () => {
+        await main();
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/🚀 Starting TypeScript Starter Application/)
-    );
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/✅ Application completed successfully/)
-    );
-  });
+        expect(consoleSpy).toHaveBeenCalledWith(
+            expect.stringMatching(/🚀 Starting TypeScript Starter Application/),
+        );
+        expect(consoleSpy).toHaveBeenCalledWith(
+            expect.stringMatching(/✅ Application completed successfully/),
+        );
+    });
 
-  it('should demonstrate calculator functionality', async () => {
-    await main();
+    it('should demonstrate calculator functionality', async () => {
+        await main();
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/Calculator example: 5 \+ 3 = 8/)
-    );
-  });
+        expect(consoleSpy).toHaveBeenCalledWith(
+            expect.stringMatching(/Calculator example: 5 \+ 3 = 8/),
+        );
+    });
 
-  it('should demonstrate user model functionality', async () => {
-    await main();
+    it('should demonstrate user model functionality', async () => {
+        await main();
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/User example:.*John Doe.*john\.doe@example\.com/)
-    );
-  });
+        expect(consoleSpy).toHaveBeenCalledWith(
+            expect.stringMatching(/User example:.*John Doe.*john\.doe@example\.com/),
+        );
+    });
 });
