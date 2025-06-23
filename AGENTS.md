@@ -240,6 +240,7 @@ try {
 - Use conventional commit messages
 - Create feature branches for new work
 - **Run `npm test` and ensure all tests pass before committing or merging**
+- **Run `npm run lint` and ensure there are no lint errors before committing or merging**
 - Use meaningful commit messages
 - Squash commits when appropriate
 

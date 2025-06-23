@@ -24,7 +24,7 @@ export class Logger {
                 format.timestamp(),
                 format.errors({ stack: true }),
                 format.splat(),
-                format.json()
+                format.json(),
             ),
             transports: [
                 new transports.Console({
@@ -32,10 +32,10 @@ export class Logger {
                         format.colorize(),
                         format.printf(({ timestamp, level, message, ...meta }) => {
                             return `[${timestamp}] ${level}: ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`;
-                        })
-                    )
-                })
-            ]
+                        }),
+                    ),
+                }),
+            ],
         });
     }
 
@@ -84,8 +84,16 @@ export class Logger {
     public getMorganStream(): StreamOptions {
         return {
             write: (message: string) => {
-                this.logger.http ? this.logger.http(message.trim()) : this.logger.info(message.trim());
-            }
+                // Use type-safe access to http method, fallback to info
+                const loggerAny = this.logger as WinstonLogger & {
+                    http?: (msg: string) => WinstonLogger;
+                };
+                if (typeof loggerAny.http === 'function') {
+                    loggerAny.http(message.trim());
+                } else {
+                    this.logger.info(message.trim());
+                }
+            },
         };
     }
 }

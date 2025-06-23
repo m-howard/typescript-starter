@@ -3,6 +3,7 @@
  */
 
 import { Logger, LogLevel, createMorganMiddleware } from '../src/utils/logger';
+import type { Logger as WinstonLogger } from 'winston';
 
 describe('Logger', () => {
     let logger: Logger;
@@ -13,12 +14,20 @@ describe('Logger', () => {
 
     beforeEach(() => {
         logger = new Logger(LogLevel.DEBUG);
-        
+
         // Mock the Winston logger methods directly
-        debugSpy = jest.spyOn((logger as any).logger, 'debug').mockImplementation(() => {});
-        infoSpy = jest.spyOn((logger as any).logger, 'info').mockImplementation(() => {});
-        warnSpy = jest.spyOn((logger as any).logger, 'warn').mockImplementation(() => {});
-        errorSpy = jest.spyOn((logger as any).logger, 'error').mockImplementation(() => {});
+        debugSpy = jest
+            .spyOn((logger as unknown as { logger: WinstonLogger }).logger, 'debug')
+            .mockImplementation(() => logger as unknown as WinstonLogger);
+        infoSpy = jest
+            .spyOn((logger as unknown as { logger: WinstonLogger }).logger, 'info')
+            .mockImplementation(() => logger as unknown as WinstonLogger);
+        warnSpy = jest
+            .spyOn((logger as unknown as { logger: WinstonLogger }).logger, 'warn')
+            .mockImplementation(() => logger as unknown as WinstonLogger);
+        errorSpy = jest
+            .spyOn((logger as unknown as { logger: WinstonLogger }).logger, 'error')
+            .mockImplementation(() => logger as unknown as WinstonLogger);
     });
 
     afterEach(() => {
@@ -33,7 +42,7 @@ describe('Logger', () => {
         logger.info('info');
         logger.warn('warn');
         logger.error('error');
-        
+
         expect(debugSpy).toHaveBeenCalledWith('debug');
         expect(infoSpy).toHaveBeenCalledWith('info');
         expect(warnSpy).toHaveBeenCalledWith('warn');
@@ -42,17 +51,17 @@ describe('Logger', () => {
 
     it('should set log level', () => {
         logger.setLogLevel(LogLevel.ERROR);
-        
+
         // Verify the logger level was set
-        expect((logger as any).logger.level).toBe(LogLevel.ERROR);
+        expect((logger as unknown as { logger: WinstonLogger }).logger.level).toBe(LogLevel.ERROR);
     });
 
     it('should log error with stack', () => {
         const err = new Error('fail');
         logger.error('error', err);
-        
+
         expect(errorSpy).toHaveBeenCalledWith('error - fail', {
-            stack: err.stack
+            stack: err.stack,
         });
     });
 
