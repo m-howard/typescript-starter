@@ -1,6 +1,6 @@
-# Copilot Instructions for TypeScript Starter Repository
+# Agent Instructions for TypeScript Starter Repository
 
-> **Note:** When updating this file, ensure that `AGENTS.md` is updated to reflect the same changes. Other than the title, the files should be the same.
+> **Note:** When updating this file, ensure that `.github/copilot-instructions.md` is updated to reflect the same changes. Other than the title, the files should be the same.
 
 ## Project Overview
 
