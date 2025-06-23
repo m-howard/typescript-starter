@@ -239,7 +239,7 @@ try {
 
 - Use conventional commit messages
 - Create feature branches for new work
-- Run tests before committing
+- **Run `npm test` and ensure all tests pass before committing or merging**
 - Use meaningful commit messages
 - Squash commits when appropriate
 
