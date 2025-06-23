@@ -1,23 +1,30 @@
 {
   "name": "typescript-starter",
   "version": "1.0.0",
-  "description": "A minimal starter repository for Typescript projects.",
+  "description": "A complete, production-ready TypeScript starter template with modern tooling and best practices.",
+  "main": "bin/main.js",
+  "types": "bin/main.d.ts",
   "author": "github.com/m-howard",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build": "tsc",
+    "clean": "./scripts/clean.sh",
+    "dev": "ts-node src/index.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "start": "ts-node src/index.ts",
+    "start:dev": "ts-node --watch src/index.ts",
+    "start:prod": "node bin/index.js",
+    "lint": "eslint \"{src,test,scripts}/**/*.{ts,js}\" --fix",
+    "lint:check": "eslint \"{src,test,scripts}/**/*.{ts,js}\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "setup": "./scripts/setup-dev.sh",
+    "build:run": "./scripts/build-and-run.sh",
+    "validate": "./scripts/validate-project.sh"
   },
   "dependencies": {
     "class-transformer": "^0.5.1",
@@ -60,15 +67,15 @@
       "json",
       "ts"
     ],
-    "rootDir": "src",
+    "rootDir": ".",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "src/**/*.(t|j)s"
     ],
-    "coverageDirectory": "../coverage",
+    "coverageDirectory": "./coverage",
     "testEnvironment": "node"
   },
   "prisma": {

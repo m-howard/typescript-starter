@@ -3,7 +3,7 @@
     "compilerOptions": {
         "outDir": "bin",
         "sourceMap": true,
-        "declaration": false,
+        "declaration": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "target": "es2017",
