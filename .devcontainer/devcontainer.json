@@ -60,7 +60,8 @@
                 },
                 "[json]": {
                     "editor.tabSize": 4
-                }
+                },
+                "explorer.sortOrder": "type"
             },
             "extensions": [
                 "esbenp.prettier-vscode",
