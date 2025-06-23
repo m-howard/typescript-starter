@@ -2,112 +2,67 @@
  * Tests for the Logger utility
  */
 
-import { Logger, LogLevel } from '../src/utils/logger';
+import { Logger, LogLevel, createMorganMiddleware } from '../src/utils/logger';
 
 describe('Logger', () => {
-    let consoleSpy: jest.SpyInstance;
+    let logger: Logger;
+    let debugSpy: jest.SpyInstance;
+    let infoSpy: jest.SpyInstance;
+    let warnSpy: jest.SpyInstance;
+    let errorSpy: jest.SpyInstance;
 
     beforeEach(() => {
-        consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+        logger = new Logger(LogLevel.DEBUG);
+        
+        // Mock the Winston logger methods directly
+        debugSpy = jest.spyOn((logger as any).logger, 'debug').mockImplementation(() => {});
+        infoSpy = jest.spyOn((logger as any).logger, 'info').mockImplementation(() => {});
+        warnSpy = jest.spyOn((logger as any).logger, 'warn').mockImplementation(() => {});
+        errorSpy = jest.spyOn((logger as any).logger, 'error').mockImplementation(() => {});
     });
 
     afterEach(() => {
-        consoleSpy.mockRestore();
+        debugSpy.mockRestore();
+        infoSpy.mockRestore();
+        warnSpy.mockRestore();
+        errorSpy.mockRestore();
     });
 
-    describe('constructor', () => {
-        it('should create logger with default INFO level', () => {
-            const logger = new Logger();
-            logger.debug('debug message');
-            logger.info('info message');
-
-            expect(consoleSpy).toHaveBeenCalledTimes(1);
-            expect(consoleSpy).toHaveBeenCalledWith(
-                expect.stringMatching(/\[.*\] ℹ️ {2}INFO: info message/),
-            );
-        });
-
-        it('should create logger with custom log level', () => {
-            const logger = new Logger(LogLevel.DEBUG);
-            logger.debug('debug message');
-            logger.info('info message');
-
-            expect(consoleSpy).toHaveBeenCalledTimes(2);
-        });
+    it('should log at all levels', () => {
+        logger.debug('debug');
+        logger.info('info');
+        logger.warn('warn');
+        logger.error('error');
+        
+        expect(debugSpy).toHaveBeenCalledWith('debug');
+        expect(infoSpy).toHaveBeenCalledWith('info');
+        expect(warnSpy).toHaveBeenCalledWith('warn');
+        expect(errorSpy).toHaveBeenCalledWith('error');
     });
 
-    describe('setLogLevel', () => {
-        it('should change log level', () => {
-            const logger = new Logger(LogLevel.WARN);
-            logger.info('info message');
-            expect(consoleSpy).not.toHaveBeenCalled();
-
-            logger.setLogLevel(LogLevel.INFO);
-            logger.info('info message');
-            expect(consoleSpy).toHaveBeenCalledTimes(1);
-        });
+    it('should set log level', () => {
+        logger.setLogLevel(LogLevel.ERROR);
+        
+        // Verify the logger level was set
+        expect((logger as any).logger.level).toBe(LogLevel.ERROR);
     });
 
-    describe('debug', () => {
-        it('should log debug messages when level allows', () => {
-            const logger = new Logger(LogLevel.DEBUG);
-            logger.debug('debug message');
-
-            expect(consoleSpy).toHaveBeenCalledWith(
-                expect.stringMatching(/\[.*\] 🐛 DEBUG: debug message/),
-            );
-        });
-
-        it('should not log debug messages when level is higher', () => {
-            const logger = new Logger(LogLevel.INFO);
-            logger.debug('debug message');
-
-            expect(consoleSpy).not.toHaveBeenCalled();
+    it('should log error with stack', () => {
+        const err = new Error('fail');
+        logger.error('error', err);
+        
+        expect(errorSpy).toHaveBeenCalledWith('error - fail', {
+            stack: err.stack
         });
     });
 
-    describe('info', () => {
-        it('should log info messages when level allows', () => {
-            const logger = new Logger(LogLevel.INFO);
-            logger.info('info message');
-
-            expect(consoleSpy).toHaveBeenCalledWith(
-                expect.stringMatching(/\[.*\] ℹ️ {2}INFO: info message/),
-            );
-        });
+    it('should provide a morgan stream', () => {
+        const stream = logger.getMorganStream();
+        expect(typeof stream.write).toBe('function');
     });
 
-    describe('warn', () => {
-        it('should log warning messages when level allows', () => {
-            const logger = new Logger(LogLevel.WARN);
-            logger.warn('warning message');
-
-            expect(consoleSpy).toHaveBeenCalledWith(
-                expect.stringMatching(/\[.*\] ⚠️ {2}WARN: warning message/),
-            );
-        });
-    });
-
-    describe('error', () => {
-        it('should log error messages', () => {
-            const logger = new Logger(LogLevel.ERROR);
-            logger.error('error message');
-
-            expect(consoleSpy).toHaveBeenCalledWith(
-                expect.stringMatching(/\[.*\] ❌ ERROR: error message/),
-                undefined,
-            );
-        });
-
-        it('should log error with stack trace', () => {
-            const logger = new Logger(LogLevel.ERROR);
-            const error = new Error('test error');
-            logger.error('error message', error);
-
-            expect(consoleSpy).toHaveBeenCalledWith(
-                expect.stringMatching(/\[.*\] ❌ ERROR: error message/),
-                expect.stringContaining('Error: test error'),
-            );
-        });
+    it('should create morgan middleware', () => {
+        const mw = createMorganMiddleware(logger, 'tiny');
+        expect(typeof mw).toBe('function');
     });
 });

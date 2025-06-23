@@ -1,69 +1,100 @@
-/**
- * Simple logger utility class
- */
+import winston, { format, transports, Logger as WinstonLogger } from 'winston';
+import morgan, { StreamOptions } from 'morgan';
 
+/**
+ * Log levels for the application
+ */
 export enum LogLevel {
-    DEBUG = 0,
-    INFO = 1,
-    WARN = 2,
-    ERROR = 3,
+    DEBUG = 'debug',
+    INFO = 'info',
+    WARN = 'warn',
+    ERROR = 'error',
 }
 
+/**
+ * Production-grade logger using winston
+ */
 export class Logger {
-    private logLevel: LogLevel;
+    private readonly logger: WinstonLogger;
 
     constructor(logLevel: LogLevel = LogLevel.INFO) {
-        this.logLevel = logLevel;
+        this.logger = winston.createLogger({
+            level: logLevel,
+            format: format.combine(
+                format.timestamp(),
+                format.errors({ stack: true }),
+                format.splat(),
+                format.json()
+            ),
+            transports: [
+                new transports.Console({
+                    format: format.combine(
+                        format.colorize(),
+                        format.printf(({ timestamp, level, message, ...meta }) => {
+                            return `[${timestamp}] ${level}: ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`;
+                        })
+                    )
+                })
+            ]
+        });
     }
 
     /**
      * Set the minimum log level
      */
     public setLogLevel(level: LogLevel): void {
-        this.logLevel = level;
+        this.logger.level = level;
     }
 
     /**
      * Log debug message
      */
     public debug(message: string, ...args: unknown[]): void {
-        if (this.logLevel <= LogLevel.DEBUG) {
-            this.log('🐛 DEBUG', message, ...args);
-        }
+        this.logger.debug(message, ...args);
     }
 
     /**
      * Log info message
      */
     public info(message: string, ...args: unknown[]): void {
-        if (this.logLevel <= LogLevel.INFO) {
-            this.log('ℹ️  INFO', message, ...args);
-        }
+        this.logger.info(message, ...args);
     }
 
     /**
      * Log warning message
      */
     public warn(message: string, ...args: unknown[]): void {
-        if (this.logLevel <= LogLevel.WARN) {
-            this.log('⚠️  WARN', message, ...args);
-        }
+        this.logger.warn(message, ...args);
     }
 
     /**
      * Log error message
      */
     public error(message: string, error?: Error, ...args: unknown[]): void {
-        if (this.logLevel <= LogLevel.ERROR) {
-            this.log('❌ ERROR', message, error?.stack || error, ...args);
+        if (error) {
+            this.logger.error(`${message} - ${error.message}`, { stack: error.stack, ...args });
+        } else {
+            this.logger.error(message, ...args);
         }
     }
 
     /**
-     * Internal log method
+     * Get a morgan middleware stream for HTTP request logging
      */
-    private log(level: string, message: string, ...args: unknown[]): void {
-        const timestamp = new Date().toISOString();
-        console.log(`[${timestamp}] ${level}: ${message}`, ...args);
+    public getMorganStream(): StreamOptions {
+        return {
+            write: (message: string) => {
+                this.logger.http ? this.logger.http(message.trim()) : this.logger.info(message.trim());
+            }
+        };
     }
+}
+
+/**
+ * Create a morgan middleware for express
+ * @param logger Logger instance
+ * @param formatStr Morgan format string (default: 'combined')
+ */
+export function createMorganMiddleware(logger: Logger, formatStr: string = 'combined') {
+    return morgan(formatStr, { stream: logger.getMorganStream() });
 }

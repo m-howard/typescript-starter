@@ -3,16 +3,22 @@
  */
 
 import { main } from '../src/index';
+import { Logger } from '../src/utils/logger';
 
 describe('Main Application (E2E)', () => {
-    let consoleSpy: jest.SpyInstance;
+    let logMessages: string[] = [];
+    let infoSpy: jest.SpyInstance;
 
     beforeEach(() => {
-        consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+        logMessages = [];
+        // Mock the Logger.info method to capture messages
+        infoSpy = jest.spyOn(Logger.prototype, 'info').mockImplementation((message: string) => {
+            logMessages.push(message);
+        });
     });
 
     afterEach(() => {
-        consoleSpy.mockRestore();
+        infoSpy.mockRestore();
     });
 
     it('should run the main application without errors', async () => {
@@ -21,28 +27,20 @@ describe('Main Application (E2E)', () => {
 
     it('should log startup and completion messages', async () => {
         await main();
-
-        expect(consoleSpy).toHaveBeenCalledWith(
-            expect.stringMatching(/🚀 Starting TypeScript Starter Application/),
-        );
-        expect(consoleSpy).toHaveBeenCalledWith(
-            expect.stringMatching(/✅ Application completed successfully/),
-        );
+        const output = logMessages.join(' ');
+        expect(output).toMatch(/🚀 Starting TypeScript Starter Application/);
+        expect(output).toMatch(/✅ Application completed successfully/);
     });
 
     it('should demonstrate calculator functionality', async () => {
         await main();
-
-        expect(consoleSpy).toHaveBeenCalledWith(
-            expect.stringMatching(/Calculator example: 5 \+ 3 = 8/),
-        );
+        const output = logMessages.join(' ');
+        expect(output).toMatch(/Calculator example: 5 \+ 3 = 8/);
     });
 
     it('should demonstrate user model functionality', async () => {
         await main();
-
-        expect(consoleSpy).toHaveBeenCalledWith(
-            expect.stringMatching(/User example:.*John Doe.*john\.doe@example\.com/),
-        );
+        const output = logMessages.join(' ');
+        expect(output).toMatch(/User example:.*John Doe.*john\.doe@example\.com/);
     });
 });
