@@ -66,7 +66,10 @@
                 "esbenp.prettier-vscode",
                 "redhat.vscode-yaml",
                 "vscode-icons-team.vscode-icons",
-                "firsttris.vscode-jest-runner"
+                "firsttris.vscode-jest-runner",
+                "mikestead.dotenv",
+                "DavidAnson.vscode-markdownlint",
+                "dbaeumer.vscode-eslint"
             ]
         }
     }
