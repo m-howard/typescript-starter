@@ -1,122 +1,155 @@
-<h1 align="center">TypeScript Starter</h1>
+<h1 align="center">AWS Pulumi Infrastructure</h1>
 
 <p align="center">
-  <em>A complete, production-ready TypeScript starter template</em>
+  <em>A complete, production-ready AWS infrastructure deployment solution</em>
   <br>
-  <em>Perfect foundation for your next TypeScript project with modern tooling and best practices</em>
+  <em>Deploy full web application infrastructure to AWS using Pulumi, TypeScript, and GitHub Actions</em>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/TypeScript-5.7.3-blue?style=flat-square&logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Pulumi-latest-purple?style=flat-square&logo=pulumi" alt="Pulumi">
+  <img src="https://img.shields.io/badge/AWS-orange?style=flat-square&logo=amazon-aws" alt="AWS">
+  <img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat-square&logo=github-actions" alt="GitHub Actions">
   <img src="https://img.shields.io/badge/Jest-29.7.0-red?style=flat-square&logo=jest" alt="Jest">
   <img src="https://img.shields.io/badge/ESLint-9.18.0-purple?style=flat-square&logo=eslint" alt="ESLint">
-  <img src="https://img.shields.io/badge/Prettier-3.4.2-yellow?style=flat-square&logo=prettier" alt="Prettier">
 </p>
 
 ## ✨ Features
 
-- 🚀 **Modern TypeScript** - Latest TypeScript with strict type checking
+- 🚀 **Infrastructure as Code** - Pulumi Automation API with TypeScript
+- ☁️ **AWS Native** - Deploy full web application infrastructure to AWS
+- 🏗️ **Multi-Stack Architecture** - Separate deployment lifecycles 
+- 🔄 **CI/CD Ready** - GitHub Actions workflows for automated deployments
+- 🧩 **Reusable Components** - Modular AWS Pulumi components
 - 🧪 **Comprehensive Testing** - Jest with unit, integration, and e2e tests
 - 📝 **Code Quality** - ESLint + Prettier for consistent code style
-- 🔧 **Development Tools** - Hot reload, debugging, and build scripts
-- 📚 **Documentation** - Complete API docs and examples
-- 🏗️ **Project Structure** - Well-organized, scalable architecture
-- ⚡ **Fast Development** - Quick setup with helpful scripts
+- 📚 **Documentation** - Complete infrastructure and deployment guides
 
 ## 🚀 Quick Start
 
 ```bash
 # Clone the repository
 git clone <your-repo-url>
-cd typescript-starter
+cd aws-pulumi-infrastructure
 
 # Install dependencies and set up development environment
 npm install
 npm run setup
 
-# Start development
-npm run start:dev
+# Configure AWS credentials
+aws configure
+
+# Deploy infrastructure (development environment)
+npm run deploy:dev
 ```
 
 ## 📁 Project Structure
 
-```
+```text
 src/
-├── index.ts           # Main application entry point
-├── main.ts            # Library exports
-├── models/            # Data models and entities
-├── services/          # Business logic and services
-└── utils/             # Utility functions and helpers
+├── index.ts           # Main Pulumi automation API entry point
+├── components/        # Reusable AWS Pulumi components
+├── stacks/           # Multi-stack definitions (dev, val, prd)
+└── utils/            # Infrastructure utility functions
 
-test/                  # Comprehensive test suite
-scripts/               # Development and build scripts
-docs/                  # Documentation
+.github/workflows/    # GitHub Actions CI/CD pipelines
+configs/             # Environment-based configurations
+test/               # Infrastructure and component tests
+docs/               # Infrastructure documentation
 ```
 
 ## 🛠️ Available Scripts
 
-| Script              | Description                      |
-| ------------------- | -------------------------------- |
-| `npm start`         | Run the application              |
-| `npm run start:dev` | Development mode with hot reload |
-| `npm run build`     | Build for production             |
-| `npm run test`      | Run all tests                    |
-| `npm run test:cov`  | Run tests with coverage          |
-| `npm run lint`      | Check code quality               |
-| `npm run format`    | Format code                      |
-| `npm run clean`     | Clean build artifacts            |
+| Script                | Description                           |
+| --------------------- | ------------------------------------- |
+| `npm run deploy:dev`  | Deploy development infrastructure     |
+| `npm run deploy:val`  | Deploy validation infrastructure      |
+| `npm run deploy:prd`  | Deploy production infrastructure      |
+| `npm run destroy:dev` | Destroy development infrastructure    |
+| `npm run preview`     | Preview infrastructure changes        |
+| `npm run test`        | Run infrastructure tests              |
+| `npm run test:cov`    | Run tests with coverage               |
+| `npm run lint`        | Check code quality                    |
+| `npm run format`      | Format code                           |
 
 ## 📖 Documentation
 
-- [Complete Documentation](./docs/README.md) - Comprehensive project guide
-- [API Reference](./docs/API.md) - Detailed API documentation
+- [Infrastructure Guide](./docs/README.md) - Complete infrastructure deployment guide
+- [AWS Components](./docs/AWS-COMPONENTS.md) - Available AWS Pulumi components
+- [Multi-Stack Architecture](./docs/MULTI-STACK.md) - Environment management strategy
 
-## 🧪 Example Usage
+## 🏗️ Infrastructure Components
 
-The starter includes example implementations:
+The repository provides reusable AWS components for:
 
 ```typescript
-import { User, Calculator, Logger } from './src/main';
+import { WebAppStack, DatabaseStack, NetworkingStack } from './src/components';
 
-// Create and use a user model
-const user = new User('John Doe', 'john@example.com', 25);
-console.log(user.getDisplayName()); // "John Doe (25)"
+// Deploy a complete web application infrastructure
+const webApp = new WebAppStack('my-app', {
+  environment: 'dev',
+  region: 'us-east-1'
+});
 
-// Use the calculator service
-const calc = new Calculator();
-console.log(calc.add(5, 3)); // 8
-
-// Use the logger utility
-const logger = new Logger();
-logger.info('Application started');
+// Use modular components
+const networking = new NetworkingStack('networking', {
+  cidr: '10.0.0.0/16'
+});
 ```
 
 ## 🎯 What's Included
 
-### Core Components
+### AWS Infrastructure Components
 
-- **User Model** - Demonstrates TypeScript classes with validation
-- **Calculator Service** - Shows service architecture patterns
-- **Logger Utility** - Provides structured logging
-- **Helper Functions** - Common utility functions
+- **VPC & Networking** - Secure network infrastructure with subnets and security groups
+- **Application Load Balancer** - High-availability load balancing
+- **ECS/Fargate Services** - Containerized application hosting
+- **RDS Databases** - Managed database solutions
+- **S3 Buckets** - Static asset storage and backups
+- **Route 53 DNS** - Domain management and routing
 
-### Development Setup
+### Multi-Environment Support
 
-- **TypeScript Configuration** - Optimized for modern development
-- **Jest Testing** - Unit, integration, and e2e test examples
-- **ESLint Rules** - Enforces code quality standards
-- **Prettier Config** - Consistent code formatting
-- **Build Scripts** - Automated development workflows
+- **Development (dev)** - Cost-optimized for development and testing
+- **Validation (val)** - Production-like environment for validation
+- **Production (prd)** - High-availability, scalable production setup
 
-## 🔧 Customization
+### CI/CD Pipeline
 
-This starter is designed to be easily customizable:
+- **GitHub Actions** - Automated infrastructure deployment
+- **Environment Promotion** - Controlled deployment across environments
+- **Infrastructure Testing** - Validation of infrastructure changes
+- **Rollback Capabilities** - Safe deployment practices
 
-1. **Models** - Replace example User model with your domain models
-2. **Services** - Add your business logic services
-3. **Utils** - Extend or replace utility functions
-4. **Tests** - Follow the testing patterns for your code
-5. **Scripts** - Modify development workflows as needed
+## 🔧 Environment Configuration
+
+The infrastructure supports environment-based configuration:
+
+```typescript
+// configs/dev.ts
+export const devConfig = {
+  region: 'us-east-1',
+  instanceType: 't3.micro',
+  minCapacity: 1,
+  maxCapacity: 2
+};
+
+// configs/prd.ts
+export const prdConfig = {
+  region: 'us-east-1',
+  instanceType: 't3.large',
+  minCapacity: 2,
+  maxCapacity: 10
+};
+```
+
+## 🚦 Deployment Workflow
+
+1. **Development** - Deploy and test infrastructure changes in dev environment
+2. **Validation** - Promote changes to validation environment for testing
+3. **Production** - Deploy validated changes to production environment
+4. **Monitoring** - Track infrastructure health and performance
 
 ## 📄 License
 

@@ -1,44 +1,46 @@
-# Agent Instructions for TypeScript Starter Repository
+# Agent Instructions for AWS Pulumi Infrastructure Repository
 
 > **Note:** When updating this file, ensure that `.github/copilot-instructions.md` is updated to reflect the same changes. Other than the title, the files should be the same.
 
 ## Project Overview
 
-This is a comprehensive TypeScript starter template designed for building robust, production-ready applications. It includes modern tooling, best practices, and a well-structured architecture suitable for both libraries and applications.
+This is a comprehensive AWS infrastructure deployment solution using Pulumi, TypeScript, and GitHub Actions. It provides the ability to deploy full web application infrastructure to AWS leveraging a multi-stack architecture for different deployment lifecycles (dev, val, prd). All infrastructure is deployed to us-east-1 by default and follows AWS best practices.
 
 ### Key Technologies
 
 - **TypeScript 5.7.3** - Main programming language with strict type checking
-- **Jest 29.7.0** - Testing framework for unit, integration, and e2e tests
+- **Pulumi** - Infrastructure as code using the Automation API
+- **AWS SDK** - AWS service integrations and resource management
+- **GitHub Actions** - CI/CD pipelines for automated infrastructure deployment
+- **Jest 29.7.0** - Testing framework for infrastructure components
 - **ESLint 9.18.0** - Code linting and quality enforcement
 - **Prettier 3.4.2** - Code formatting
-- **ts-node** - TypeScript execution and development
-- **Lodash** - Utility functions
-- **Class-validator & Class-transformer** - Data validation and transformation
 
 ## Project Structure
 
-```
+```text
 src/
-├── index.ts           # Main application entry point
-├── main.ts           # Alternative entry point
-├── models/           # Data models and entities
-│   └── user.ts       # User model with validation
-├── services/         # Business logic and services
-│   └── calculator.ts # Example calculator service
-└── utils/            # Utility functions and helpers
-    ├── helpers.ts    # General helper functions
-    └── logger.ts     # Logging utilities
+├── index.ts           # Main Pulumi automation API entry point
+├── components/       # Reusable AWS Pulumi components
+│   ├── networking/   # VPC, subnets, security groups
+│   ├── compute/      # ECS, EC2, load balancers
+│   ├── storage/      # S3, RDS, ElastiCache
+│   ├── monitoring/      # CloudWatch, alarms
+│   └── index.ts   # Infrastructure component exports
+├── stacks/          # Multi-stack definitions
+└── utils/           # Infrastructure utility functions
+    ├── helpers.ts   # General helper functions
+    └── logger.ts    # Logging utilities
 
-test/                 # Test files mirroring src structure
-├── *.spec.ts        # Unit tests
-├── *.e2e.spec.ts    # End-to-end tests
-└── jest-e2e.json    # E2E test configuration
+.github/workflows/   # GitHub Actions CI/CD pipelines
+configs/            # Environment-based configurations
+test/              # Infrastructure and component tests
+├── *.spec.ts      # Unit tests for components
+├── *.e2e.spec.ts  # End-to-end infrastructure tests
+└── jest-e2e.json  # E2E test configuration
 
-bin/                 # Compiled JavaScript output
-docs/                # Documentation
-examples/            # Usage examples
-scripts/             # Build and utility scripts
+bin/               # Compiled JavaScript output
+docs/              # Infrastructure documentation
 ```
 
 ## Coding Standards & Best Practices
@@ -50,74 +52,91 @@ scripts/             # Build and utility scripts
 - **Null Safety**: Use strict null checks, prefer optional chaining (`?.`)
 - **Interfaces vs Types**: Use interfaces for object shapes, types for unions/primitives
 - **Naming Conventions**:
-    - Classes: PascalCase (`User`, `Calculator`)
-    - Functions/Variables: camelCase (`getUserById`, `isValid`)
-    - Constants: UPPER_SNAKE_CASE (`MAX_RETRY_ATTEMPTS`)
-    - Files: kebab-case (`user-service.ts`) or camelCase (`userService.ts`)
+  - Classes: PascalCase (`VpcComponent`, `EcsService`)
+  - Functions/Variables: camelCase (`createVpc`, `isValid`)
+  - Constants: UPPER_SNAKE_CASE (`DEFAULT_REGION`, `MAX_RETRY_ATTEMPTS`)
+  - Files: kebab-case (`vpc-component.ts`) or camelCase (`vpcComponent.ts`)
 
-### Code Organization
+### Infrastructure Organization
 
-- **Single Responsibility**: Each class/function should have one clear purpose
-- **Dependency Injection**: Use constructor injection for dependencies
-- **Error Handling**: Use proper error types, avoid silent failures
-- **Immutability**: Prefer readonly properties and immutable patterns
-- **Documentation**: Use JSDoc comments for public APIs
+- **Reusability**: Create modular components that can be reused across stacks
+- **Resource Tagging**: Apply consistent tagging strategy for cost tracking and compliance
+- **Security First**: Follow AWS security best practices in all components
+- **Documentation**: Use JSDoc comments for all infrastructure components
 
 ### File Structure Patterns
 
 ```typescript
-// Standard file structure
+// Standard infrastructure component structure
 /**
- * File description
+ * AWS VPC Component - Creates and manages VPC infrastructure
  */
 
 // Imports (external libraries first, then internal)
-import { external } from 'library';
-import { Internal } from '../internal';
+import * as aws from '@pulumi/aws';
+import * as pulumi from '@pulumi/pulumi';
+import { ComponentArgs } from '../types';
 
 // Types and interfaces
-interface UserConfig {
-    // ...
+interface VpcArgs extends ComponentConfig {
+    cidrBlock: string;
+    enableDnsHostnames?: boolean;
 }
 
-// Main class/function implementation
-export class ServiceName {
-    // ...
+// Main component implementation
+export class VpcComponent extends pulumi.ComponentResource {
+    public readonly vpc: aws.ec2.Vpc;
+    public readonly publicSubnets: aws.ec2.Subnet[];
+    public readonly privateSubnets: aws.ec2.Subnet[];
+
+    constructor(name: string, args: VpcArgs, opts?: pulumi.ComponentResourceOptions) {
+        super('aws:networking:VpcComponent', name, {}, opts);
+        
+        // Implementation
+    }
 }
 
 // Default export (if applicable)
-export default ServiceName;
+export default VpcComponent;
 ```
 
 ## Development Workflow
 
 ### Available Scripts
 
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Compile TypeScript to JavaScript
-- `npm run test` - Run unit tests
+- `npm run deploy:dev` - Deploy development infrastructure to AWS
+- `npm run deploy:val` - Deploy validation infrastructure to AWS
+- `npm run deploy:prd` - Deploy production infrastructure to AWS
+- `npm run destroy:dev` - Destroy development infrastructure
+- `npm run destroy:val` - Destroy validation infrastructure
+- `npm run preview` - Preview infrastructure changes before deployment
+- `npm run test` - Run infrastructure component tests
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:cov` - Run tests with coverage
-- `npm run test:e2e` - Run end-to-end tests
+- `npm run test:e2e` - Run end-to-end infrastructure tests
 - `npm run lint` - Run ESLint with auto-fix
 - `npm run format` - Format code with Prettier
 
 ### Testing Strategy
 
-- **Unit Tests**: Test individual functions/classes in isolation
-- **Integration Tests**: Test component interactions
-- **E2E Tests**: Test complete user workflows
+- **Unit Tests**: Test individual AWS components in isolation
+- **Integration Tests**: Test component interactions and dependencies
+- **E2E Tests**: Test complete infrastructure stack deployments
 - **Coverage Target**: Aim for >80% code coverage
-- **Test Naming**: Describe behavior, not implementation
+- **Test Naming**: Describe infrastructure behavior, not implementation
 
 ```typescript
-// Good test naming
-describe('Calculator', () => {
-    it('should return sum when adding two positive numbers', () => {
+// Good infrastructure test naming
+describe('VpcComponent', () => {
+    it('should create VPC with correct CIDR block', () => {
         // ...
     });
 
-    it('should throw error when dividing by zero', () => {
+    it('should create public and private subnets in multiple AZs', () => {
+        // ...
+    });
+
+    it('should throw error when invalid CIDR block provided', () => {
         // ...
     });
 });
@@ -125,38 +144,57 @@ describe('Calculator', () => {
 
 ## Code Generation Guidelines
 
-### When Creating New Features
+### When Creating New Infrastructure
 
-1. **Models**: Create in `src/models/` with proper validation
-2. **Services**: Create in `src/services/` with business logic
-3. **Utils**: Create in `src/utils/` for reusable functions
-4. **Tests**: Mirror src structure in test/ directory
+1. **Components**: Create in `src/components/` with proper AWS resource management
+2. **Stacks**: Create in `src/stacks/` for environment-specific deployments
+3. **Configs**: Create in `configs/` for environment-based configuration
+4. **Utils**: Create in `src/utils/` for reusable infrastructure functions
+5. **Tests**: Mirror src structure in test/ directory
 
-### Class Structure Template
+### Component Structure Template
 
 ```typescript
 /**
- * Description of the class purpose
+ * AWS ECS Service Component - Manages containerized application deployment
  */
-export class ClassName {
-    private readonly property: Type;
+export class EcsServiceComponent extends pulumi.ComponentResource {
+    public readonly service: aws.ecs.Service;
+    public readonly taskDefinition: aws.ecs.TaskDefinition;
+    public readonly targetGroup: aws.lb.TargetGroup;
 
     constructor(
-        public readonly param: Type,
-        private dependency: Dependency,
+        name: string,
+        args: EcsServiceArgs,
+        dependencies: EcsServiceDependencies,
+        opts?: pulumi.ComponentResourceOptions
     ) {
-        this.property = this.initializeProperty();
+        super('aws:compute:EcsServiceComponent', name, {}, opts);
+
+        this.taskDefinition = this.createTaskDefinition(config);
+        this.targetGroup = this.createTargetGroup(config);
+        this.service = this.createService(config, dependencies);
+
+        this.registerOutputs({
+            service: this.service,
+            taskDefinition: this.taskDefinition,
+            targetGroup: this.targetGroup
+        });
     }
 
     /**
-     * Public method description
+     * Creates ECS task definition with container specifications
      */
-    public methodName(): ReturnType {
+    private createTaskDefinition(args: EcsServiceArgs): aws.ecs.TaskDefinition {
         // Implementation
     }
 
-    private helperMethod(): void {
-        // Private implementation
+    private createTargetGroup(args: EcsServiceArgs): aws.lb.TargetGroup {
+        // Implementation
+    }
+
+    private createService(args: EcsServiceArgs, deps: EcsServiceDependencies): aws.ecs.Service {
+        // Implementation
     }
 }
 ```
@@ -164,45 +202,57 @@ export class ClassName {
 ### Error Handling Patterns
 
 ```typescript
-// Use custom error classes
+// Use custom error classes for infrastructure failures
+export class InfrastructureError extends Error {
+    constructor(resource: string, operation: string, cause?: Error) {
+        super(`Failed to ${operation} ${resource}: ${cause?.message || 'Unknown error'}`);
+        this.name = 'InfrastructureError';
+    }
+}
+
 export class ValidationError extends Error {
-    constructor(field: string, value: unknown) {
-        super(`Invalid ${field}: ${value}`);
+    constructor(field: string, value: unknown, requirement: string) {
+        super(`Invalid ${field}: ${value} (${requirement})`);
         this.name = 'ValidationError';
     }
 }
 
-// Handle errors appropriately
+// Handle infrastructure operations appropriately
 try {
-    const result = await riskyOperation();
-    return result;
+    const vpc = await createVpc(config);
+    return vpc;
 } catch (error) {
-    logger.error('Operation failed', error);
-    throw new ProcessingError('Failed to process request');
+    logger.error('VPC creation failed', error);
+    throw new InfrastructureError('VPC', 'create', error);
 }
 ```
 
-### Async/Await Best Practices
+### Pulumi/AWS Best Practices
 
-- Always use `async/await` over Promise chains
-- Handle errors with try/catch blocks
-- Use proper return types (`Promise<T>`)
-- Don't forget to await async calls
+- Always use `pulumi.ComponentResource` for complex components
+- Implement proper resource dependencies with `dependsOn`
+- Use `registerOutputs()` for component outputs
+- Handle AWS service limits and quotas gracefully
+- Implement proper resource tagging for cost allocation
+- Use AWS IAM least-privilege access principles
 
 ## Dependencies & Libraries
 
 ### Core Dependencies
 
-- **lodash**: Use for utility functions (debounce, deep clone, etc.)
-- **class-validator**: For model validation decorators
-- **class-transformer**: For object transformation
+- **@pulumi/pulumi**: Core Pulumi framework for infrastructure as code
+- **@pulumi/aws**: AWS provider for Pulumi
+- **@pulumi/automation**: Pulumi Automation API for programmatic deployments
+- **aws-sdk**: AWS SDK for additional AWS service integrations
+- **lodash**: Use for utility functions (deep merge, cloning configuration objects)
 
 ### Development Dependencies
 
 - **@types/\***: Always install type definitions for libraries
-- **jest**: Primary testing framework
+- **jest**: Primary testing framework for infrastructure components
 - **eslint**: Code quality and style enforcement
 - **prettier**: Code formatting
+- **@pulumi/policy**: Policy as code for infrastructure compliance
 
 ### Adding New Dependencies
 
@@ -210,55 +260,62 @@ try {
 2. Add types if needed: `npm install --save-dev @types/package-name`
 3. Update imports to follow project patterns
 4. Add to appropriate tsconfig paths if needed
+5. Consider AWS service limits and Pulumi provider compatibility
 
 ## Performance Considerations
 
-- Use lazy loading for large imports
-- Implement proper caching strategies
-- Avoid memory leaks with proper cleanup
-- Use efficient algorithms and data structures
-- Profile and optimize critical paths
+- Use Pulumi resource options for parallel deployment where safe
+- Implement proper resource dependencies to avoid circular references
+- Use Pulumi outputs or System Manager parameters for cross-stack references
+- Use Pulumi transformations for bulk resource modifications
+- Consider AWS service limits when designing auto-scaling policies
 
 ## Security Guidelines
 
-- Validate all inputs using class-validator
-- Sanitize data before processing
-- Use proper error messages (don't leak sensitive info)
-- Follow principle of least privilege
-- Keep dependencies updated
+- Validate all infrastructure inputs using TypeScript interfaces
+- Use AWS SecretManager Parameter Store for secrets management
+- Follow AWS security best practices (encryption, IAM policies, VPC security)
+- Implement least-privilege access principles for all resources
+- Use AWS Security Groups with minimal required access
+- Keep AWS provider and Pulumi dependencies updated
 
 ## Documentation Standards
 
-- Use JSDoc comments
-- Include examples in documentation
-- Keep README.md updated with new features
+- Use JSDoc comments for all infrastructure components
+- Include examples in component documentation
+- Keep README.md updated with new infrastructure capabilities
 - Document breaking changes in commit messages
-- Maintain API documentation in docs/ directory
+- Maintain infrastructure documentation in docs/ directory
+- Include deployment runbooks and troubleshooting guides
 
 ## Git Workflow
 
-- Use conventional commit messages
-- Create feature branches for new work
+- Use conventional commit messages (feat, fix, docs, refactor, etc.)
+- Create feature branches for new infrastructure work
 - **Run `npm test` and ensure all tests pass before committing or merging**
 - **Run `npm run lint` and ensure there are no lint errors before committing or merging**
-- Use meaningful commit messages
-- Squash commits when appropriate
+- Test infrastructure changes in development environment first
+- Use meaningful commit messages that describe infrastructure changes
+- Squash commits when appropriate for cleaner history
 
 ## Environment Setup
 
 This project is designed to work in dev containers and includes:
 
-- Pre-configured TypeScript environment
-- Git, Docker CLI, and common tools
+- Pre-configured TypeScript environment optimized for Pulumi development
+- AWS CLI, Pulumi CLI, and infrastructure tools
+- Git, Docker CLI, and common development tools
 - Debian-based container with modern tooling
-- All necessary VS Code extensions recommendations
+- All necessary VS Code extensions for infrastructure development
 
 ## Additional Guidelines
 
-- **JSDoc Comments**: All interfaces, classes, and methods must include clear and descriptive JSDoc comments.
-- **Validation Scripts**: Any validation scripts created that are not tests should be removed after use to keep the repository clean.
-- **Unit Tests**: Always add unit tests for new features, bug fixes, and where appropriate to ensure code reliability.
-- **Environment Variables**: Use the `dotenv` package for managing environment variables during local development. Document required variables in a `.env.example` file.
-- **Code Comments**: Provide detailed code comments wherever logic is complex or not immediately clear, to aid maintainability and onboarding.
+- **JSDoc Comments**: All infrastructure components, interfaces, and methods must include clear and descriptive JSDoc comments with usage examples.
+- **Infrastructure Validation**: Any infrastructure validation scripts created that are not tests should be removed after use to keep the repository clean.
+- **Unit Tests**: Always add unit tests for new infrastructure components, bug fixes, and configuration changes to ensure infrastructure reliability.
+- **Environment Variables**: Use AWS Systems Manager Parameter Store for environment-specific configuration. Document required parameters in environment-specific documentation.
+- **Code Comments**: Provide detailed code comments wherever infrastructure logic is complex or not immediately clear, especially for AWS resource configurations and dependencies.
+- **Cost Optimization**: Always consider AWS costs when designing infrastructure and include cost optimization strategies in component design.
+- **Multi-Region Support**: Design components to be region-agnostic where possible, with us-east-1 as the default region.
 
-When generating code, always consider the existing patterns and maintain consistency with the established architecture.
+When generating infrastructure code, always consider the existing patterns and maintain consistency with the established AWS architecture and Pulumi best practices.

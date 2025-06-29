@@ -1,45 +1,64 @@
-# TypeScript Starter Documentation
+# AWS Pulumi Infrastructure Documentation
 
 ## Overview
 
-This TypeScript Starter provides a complete foundation for building TypeScript applications with modern development practices and tools.
+This AWS Pulumi Infrastructure repository provides a complete foundation for deploying web application infrastructure to AWS using Pulumi, TypeScript, and GitHub Actions. The project follows a multi-stack architecture to support different deployment lifecycles and environments.
 
 ## Project Structure
 
-```
-typescript-starter/
-├── src/                    # Source code
-│   ├── index.ts           # Main entry point
-│   ├── main.ts            # Export barrel file
-│   ├── models/            # Data models
-│   │   └── user.ts        # User model example
-│   ├── services/          # Business logic services
-│   │   └── calculator.ts  # Calculator service example
-│   └── utils/             # Utility functions
-│       ├── helpers.ts     # General helper functions
-│       └── logger.ts      # Logging utility
-├── test/                  # Test files
-├── scripts/               # Build and development scripts
-├── docs/                  # Documentation
-├── bin/                   # Compiled output (generated)
-└── coverage/              # Test coverage reports (generated)
+```text
+aws-pulumi-infrastructure/
+├── src/                        # Infrastructure source code
+│   ├── index.ts               # Main Pulumi automation API entry point
+│   ├── components/            # Reusable AWS Pulumi components
+│   │   ├── networking/        # VPC, subnets, security groups
+│   │   ├── compute/           # ECS, EC2, load balancers
+│   │   ├── storage/           # S3, RDS, ElastiCache
+│   │   ├── monitoring/        # CloudWatch, alarms
+│   │   └── index.ts           # Infrastructure component exports
+│   ├── stacks/               # Multi-stack definitions
+│   └── utils/                # Infrastructure utility functions
+│       ├── helpers.ts        # General helper functions
+│       └── logger.ts         # Logging utility
+├── .github/workflows/        # GitHub Actions CI/CD pipelines
+├── configs/                  # Environment-based configurations
+│   ├── dev.ts               # Development configuration
+│   ├── val.ts               # Validation configuration
+│   └── prd.ts               # Production configuration
+├── test/                    # Infrastructure and component tests
+│   ├── *.spec.ts            # Unit tests for components
+│   ├── *.e2e.spec.ts        # End-to-end infrastructure tests
+│   └── jest-e2e.json        # E2E test configuration
+├── docs/                    # Infrastructure documentation
+├── bin/                     # Compiled output (generated)
+└── coverage/                # Test coverage reports (generated)
 ```
 
 ## Features
 
-### Core Components
+### AWS Infrastructure Components
 
-- **Models**: Example `User` class demonstrating TypeScript features
-- **Services**: `Calculator` service showing business logic implementation
-- **Utilities**: Helper functions and logging functionality
+- **VPC & Networking**: Complete VPC setup with public/private subnets, NAT gateways, and security groups
+- **Application Load Balancer**: High-availability load balancing with SSL termination
+- **ECS/Fargate**: Containerized application hosting with auto-scaling
+- **RDS**: Managed database solutions with backup and monitoring
+- **S3**: Static asset storage, backups, and CloudFront integration
+- **Route 53**: DNS management and health checks
+
+### Multi-Stack Architecture
+
+- **Development (dev)**: Cost-optimized environment for development and testing
+- **Validation (val)**: Production-like environment for validation and staging
+- **Production (prd)**: High-availability, scalable production infrastructure
 
 ### Development Tools
 
-- **TypeScript**: Strict type checking with modern ES features
-- **Jest**: Complete testing framework with coverage reporting
-- **ESLint**: Code linting with TypeScript support
-- **Prettier**: Code formatting
-- **Scripts**: Automated development workflows
+- **Pulumi Automation API**: Infrastructure as code with TypeScript
+- **GitHub Actions**: Automated CI/CD pipelines for infrastructure deployment
+- **Environment Configuration**: Structured configuration management per environment
+- **Jest**: Infrastructure testing framework with coverage reporting
+- **ESLint**: Code linting with TypeScript and Pulumi best practices
+- **Prettier**: Code formatting for consistent style
 
 ## Getting Started
 
@@ -47,6 +66,8 @@ typescript-starter/
 
 - Node.js (version 16 or higher)
 - npm or yarn
+- AWS CLI configured with appropriate credentials
+- Pulumi CLI installed
 
 ### Installation
 
@@ -57,88 +78,144 @@ typescript-starter/
     npm install
     ```
 
-3. Run the setup script:
+3. Configure AWS credentials:
+
+    ```bash
+    aws configure
+    ```
+
+4. Install and configure Pulumi:
+
+    ```bash
+    curl -fsSL https://get.pulumi.com | sh
+    pulumi login
+    ```
+
+5. Run the setup script:
+
     ```bash
     ./scripts/setup-dev.sh
     ```
 
-### Development
+### Infrastructure Deployment
 
-Start the development server with watch mode:
+Deploy development environment:
 
 ```bash
-npm run start:dev
+npm run deploy:dev
 ```
 
-Run tests:
+Deploy validation environment:
 
 ```bash
-npm test
+npm run deploy:val
 ```
 
-Run tests with coverage:
+Deploy production environment:
 
 ```bash
-npm run test:cov
+npm run deploy:prd
 ```
 
-### Building
-
-Build the project:
+Preview changes before deployment:
 
 ```bash
-npm run build
+npm run preview
 ```
 
-Run the compiled application:
+Destroy infrastructure (development only):
 
 ```bash
-npm run start:prod
+npm run destroy:dev
 ```
 
 ## Available Scripts
 
-- `npm run build` - Compile TypeScript to JavaScript
-- `npm run start` - Run the application
-- `npm run start:dev` - Run in development mode with watch
-- `npm run start:prod` - Run the compiled application
-- `npm run test` - Run unit tests
+- `npm run deploy:dev` - Deploy development infrastructure
+- `npm run deploy:val` - Deploy validation infrastructure  
+- `npm run deploy:prd` - Deploy production infrastructure
+- `npm run destroy:dev` - Destroy development infrastructure
+- `npm run destroy:val` - Destroy validation infrastructure
+- `npm run preview` - Preview infrastructure changes
+- `npm run test` - Run infrastructure tests
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:cov` - Run tests with coverage
-- `npm run test:e2e` - Run end-to-end tests
+- `npm run test:e2e` - Run end-to-end infrastructure tests
 - `npm run lint` - Run ESLint
 - `npm run format` - Format code with Prettier
 
-## Testing
+## Infrastructure Testing
 
-The project includes comprehensive testing:
+The project includes comprehensive infrastructure testing:
 
-- **Unit Tests**: Individual component testing
-- **Integration Tests**: Service interaction testing
-- **End-to-End Tests**: Full application flow testing
+- **Unit Tests**: Individual component testing (VPC, ALB, ECS, etc.)
+- **Integration Tests**: Multi-component interaction testing
+- **End-to-End Tests**: Full infrastructure stack validation
 
 Test files are located in the `test/` directory and follow the naming convention `*.spec.ts` for unit tests and `*.e2e.spec.ts` for end-to-end tests.
 
-## Code Style
+Example infrastructure test:
 
-The project enforces consistent code style using:
+```typescript
+describe('VPC Component', () => {
+  it('should create VPC with correct CIDR block', async () => {
+    const vpc = new VpcComponent('test-vpc', {
+      cidrBlock: '10.0.0.0/16'
+    });
+    
+    expect(vpc.vpc.cidrBlock).toBe('10.0.0.0/16');
+  });
+});
+```
 
-- **ESLint**: For code quality and consistency
-- **Prettier**: For code formatting
-- **TypeScript**: For type safety
+## Multi-Environment Configuration
 
-Configuration files:
+The project uses environment-based configuration files:
 
-- `.eslintrc.js` - ESLint configuration
-- `.prettierrc` - Prettier configuration
-- `tsconfig.json` - TypeScript configuration
+```typescript
+// configs/dev.ts
+export const devConfig = {
+  region: 'us-east-1',
+  environment: 'dev',
+  vpc: {
+    cidrBlock: '10.0.0.0/16'
+  },
+  ecs: {
+    instanceType: 't3.micro',
+    minCapacity: 1,
+    maxCapacity: 2
+  },
+  rds: {
+    instanceClass: 'db.t3.micro',
+    allocatedStorage: 20
+  }
+};
+```
+
+## CI/CD with GitHub Actions
+
+The repository includes GitHub Actions workflows for:
+
+- **Infrastructure Validation**: Lint, test, and validate infrastructure code
+- **Environment Deployment**: Automated deployment to dev, val, and prd environments
+- **Infrastructure Drift Detection**: Monitor and alert on configuration drift
+- **Security Scanning**: Scan infrastructure code for security vulnerabilities
 
 ## Contributing
 
-1. Follow the existing code style
-2. Write tests for new functionality
-3. Ensure all tests pass before submitting
-4. Run `npm run lint` to check code quality
+1. Follow the existing infrastructure patterns and naming conventions
+2. Write tests for new AWS components
+3. Ensure all tests pass before submitting: `npm test`
+4. Run linting to check code quality: `npm run lint`
+5. Test infrastructure changes in development environment first
+6. Document new components and configuration options
+
+## Security Considerations
+
+- All infrastructure follows AWS security best practices
+- Secrets and sensitive data are managed through AWS Systems Manager
+- Network security groups follow least-privilege access principles
+- All resources are tagged for cost tracking and compliance
 
 ## License
 
