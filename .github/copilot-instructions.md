@@ -116,18 +116,51 @@ export default VpcComponent;
 
 ### Available Scripts
 
-- `npm run deploy:dev` - Deploy development infrastructure to AWS
-- `npm run deploy:val` - Deploy validation infrastructure to AWS
-- `npm run deploy:prd` - Deploy production infrastructure to AWS
-- `npm run destroy:dev` - Destroy development infrastructure
-- `npm run destroy:val` - Destroy validation infrastructure
-- `npm run preview` - Preview infrastructure changes before deployment
+#### Core Development
+
+- `npm run dev` - Quick development preview of all infrastructure layers
+- `npm run start` - Alias for `dev`
+- `npm run build` - Compile TypeScript to JavaScript
 - `npm run test` - Run infrastructure component tests
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:cov` - Run tests with coverage
 - `npm run test:e2e` - Run end-to-end infrastructure tests
 - `npm run lint` - Run ESLint with auto-fix
 - `npm run format` - Format code with Prettier
+
+#### Environment Deployments
+
+- `npm run deploy:dev` - Deploy all layers to development environment
+- `npm run deploy:val` - Deploy all layers to validation environment
+- `npm run deploy:prd` - Deploy all layers to production environment
+- `npm run destroy:dev` - Destroy all layers in development
+- `npm run destroy:val` - Destroy all layers in validation
+- `npm run destroy:prd` - Destroy all layers in production
+- `npm run preview:dev` - Preview changes in development
+- `npm run preview:val` - Preview changes in validation
+- `npm run preview:prd` - Preview changes in production
+
+#### Specialized Deployments
+
+- `npm run deploy:foundation` - Deploy account baseline + networking layers
+- `npm run deploy:platform` - Deploy foundation + services + data layers
+- `npm run destroy:platform` - Destroy platform components only
+- `npm run deploy:multi-region` - Deploy across multiple regions
+
+#### Custom Orchestration
+
+For advanced scenarios, use the orchestrator directly:
+
+```bash
+# Deploy specific layers
+npx ts-node src/index.ts deploy prd --scope acct-baseline,net-foundation --regions us-east-1
+
+# Multi-region deployment
+npx ts-node src/index.ts deploy prd --scope workload --regions us-east-1,us-west-2
+
+# Preview specific scope
+npx ts-node src/index.ts preview val --scope svc-platform,stateful-data --regions us-east-1
+```
 
 ### Testing Strategy
 

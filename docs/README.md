@@ -2,29 +2,73 @@
 
 ## Overview
 
-This AWS Pulumi Infrastructure repository provides a complete foundation for deploying web application infrastructure to AWS using Pulumi, TypeScript, and GitHub Actions. The project follows a multi-stack architecture to support different deployment lifecycles and environments.
+This AWS Pulumi Infrastructure repository provides a complete foundation for deploying web application infrastructure to AWS using Pulumi, TypeScript, and the Automation API. The project follows a layered architecture based on AWS best practices to support different deployment lifecycles and environments.
+
+## Layered Architecture
+
+The infrastructure follows a 5-layer dependency model:
+
+```text
+  acct-baseline (Account-wide policies, roles, config rules)
+        ↓
+net-foundation (VPC, subnets, gateways, endpoints, certs)
+        ↓
+ ┌──────────────────┐
+ ↓                  ↓
+stateful-data    svc-platform (Clusters, service mesh, observability)
+        ↓
+     workload (Application services & blue/green deployments)
+```
+
+### Layer Details
+
+#### Account Baseline (`acct-baseline`)
+- **Purpose**: Account-wide policies, roles, config rules
+- **Scope**: Per AWS Account
+- **Contains**: IAM policies, CloudTrail, Config rules, compliance settings
+
+#### Network Foundation (`net-foundation`)
+- **Purpose**: VPC, subnets, gateways, endpoints, certificates
+- **Scope**: Per Region
+- **Contains**: VPC, subnets, NAT gateways, VPC endpoints, ACM certificates
+
+#### Service Platform (`svc-platform`)
+- **Purpose**: Clusters, service mesh, platform observability
+- **Scope**: Per Region
+- **Contains**: EKS/ECS clusters, service mesh, monitoring infrastructure
+
+#### Stateful Data (`stateful-data`)
+- **Purpose**: Data storage systems
+- **Scope**: Per Region
+- **Contains**: RDS databases, ElastiCache, S3 buckets, data stores
+
+#### Workload (`workload`)
+- **Purpose**: Application services & blue/green deployments
+- **Scope**: Per Region
+- **Contains**: Application services, load balancers, auto-scaling groups
 
 ## Project Structure
 
 ```text
 aws-pulumi-infrastructure/
 ├── src/                        # Infrastructure source code
-│   ├── index.ts               # Main Pulumi automation API entry point
+│   ├── index.ts               # Main Pulumi automation API orchestrator
 │   ├── components/            # Reusable AWS Pulumi components
 │   │   ├── networking/        # VPC, subnets, security groups
 │   │   ├── compute/           # ECS, EC2, load balancers
 │   │   ├── storage/           # S3, RDS, ElastiCache
 │   │   ├── monitoring/        # CloudWatch, alarms
 │   │   └── index.ts           # Infrastructure component exports
-│   ├── stacks/               # Multi-stack definitions
+│   ├── stacks/               # 5-layer stack definitions
+│   │   ├── acct-baseline.ts   # Account baseline stack
+│   │   ├── net-foundation.ts  # Network foundation stack
+│   │   ├── svc-platform.ts    # Service platform stack
+│   │   ├── stateful-data.ts   # Data storage stack
+│   │   └── workloads.ts       # Application workload stack
 │   └── utils/                # Infrastructure utility functions
 │       ├── helpers.ts        # General helper functions
 │       └── logger.ts         # Logging utility
 ├── .github/workflows/        # GitHub Actions CI/CD pipelines
-├── configs/                  # Environment-based configurations
-│   ├── dev.ts               # Development configuration
-│   ├── val.ts               # Validation configuration
-│   └── prd.ts               # Production configuration
 ├── test/                    # Infrastructure and component tests
 │   ├── *.spec.ts            # Unit tests for components
 │   ├── *.e2e.spec.ts        # End-to-end infrastructure tests
@@ -45,7 +89,7 @@ aws-pulumi-infrastructure/
 - **S3**: Static asset storage, backups, and CloudFront integration
 - **Route 53**: DNS management and health checks
 
-### Multi-Stack Architecture
+### Multi-Environment Support
 
 - **Development (dev)**: Cost-optimized environment for development and testing
 - **Validation (val)**: Production-like environment for validation and staging
@@ -120,29 +164,120 @@ npm run deploy:prd
 Preview changes before deployment:
 
 ```bash
-npm run preview
+npm run preview:dev  # or preview:val, preview:prd
 ```
 
-Destroy infrastructure (development only):
+Destroy infrastructure:
 
 ```bash
-npm run destroy:dev
+npm run destroy:dev  # or destroy:val, destroy:prd
 ```
 
 ## Available Scripts
 
-- `npm run deploy:dev` - Deploy development infrastructure
-- `npm run deploy:val` - Deploy validation infrastructure  
-- `npm run deploy:prd` - Deploy production infrastructure
-- `npm run destroy:dev` - Destroy development infrastructure
-- `npm run destroy:val` - Destroy validation infrastructure
-- `npm run preview` - Preview infrastructure changes
-- `npm run test` - Run infrastructure tests
+### Core Development
+
+- `npm run dev` - Quick development preview of all infrastructure
+- `npm run start` - Alias for `dev`
+- `npm run build` - Compile TypeScript to JavaScript
+- `npm run test` - Run infrastructure component tests
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:cov` - Run tests with coverage
 - `npm run test:e2e` - Run end-to-end infrastructure tests
-- `npm run lint` - Run ESLint
+- `npm run lint` - Check and fix code quality
 - `npm run format` - Format code with Prettier
+
+### Environment Deployments
+
+- `npm run deploy:dev` - Deploy all layers to development
+- `npm run deploy:val` - Deploy all layers to validation
+- `npm run deploy:prd` - Deploy all layers to production
+- `npm run destroy:dev` - Destroy all layers in development
+- `npm run destroy:val` - Destroy all layers in validation
+- `npm run destroy:prd` - Destroy all layers in production
+- `npm run preview:dev` - Preview changes in development
+- `npm run preview:val` - Preview changes in validation
+- `npm run preview:prd` - Preview changes in production
+
+### Specialized Deployments
+
+- `npm run deploy:foundation` - Deploy account baseline + networking
+- `npm run deploy:platform` - Deploy foundation + services + data
+- `npm run destroy:platform` - Destroy platform components only
+- `npm run deploy:multi-region` - Deploy across multiple regions
+
+### Custom Orchestration
+
+For advanced use cases, use the orchestrator directly:
+
+```bash
+# Deploy specific layers
+npx ts-node src/index.ts deploy prd --scope acct-baseline,net-foundation --regions us-east-1
+
+# Multi-region deployment
+npx ts-node src/index.ts deploy prd --scope workload --regions us-east-1,us-west-2
+
+# Preview specific scope
+npx ts-node src/index.ts preview val --scope svc-platform,stateful-data --regions us-east-1
+```
+
+## Usage Examples
+
+### Quick Development Workflow
+
+```bash
+# Start development - preview all infrastructure layers
+npm run dev
+
+# Deploy everything to development
+npm run deploy:dev
+
+# Make infrastructure changes and preview
+npm run preview:dev
+
+# Deploy changes
+npm run deploy:dev
+
+# Run tests to validate
+npm run test
+```
+
+### Environment Promotion Workflow
+
+```bash
+# 1. Develop and test
+npm run deploy:dev
+npm run test
+
+# 2. Promote to validation
+npm run deploy:val
+
+# 3. Deploy to production
+npm run deploy:prd
+```
+
+### Incremental Development
+
+```bash
+# Deploy just the foundation layers (account + network)
+npm run deploy:foundation
+
+# Deploy platform components (foundation + services + data)
+npm run deploy:platform
+
+# Deploy workloads to complete the stack
+npx ts-node src/index.ts deploy dev --scope workload --regions us-east-1
+```
+
+### Multi-Region Deployment
+
+```bash
+# Deploy to multiple regions
+npm run deploy:multi-region
+
+# Or deploy specific layers to specific regions
+npx ts-node src/index.ts deploy prd --scope net-foundation,svc-platform --regions us-west-2,eu-west-1
+```
 
 ## Infrastructure Testing
 

@@ -19,12 +19,13 @@
 
 - 🚀 **Infrastructure as Code** - Pulumi Automation API with TypeScript
 - ☁️ **AWS Native** - Deploy full web application infrastructure to AWS
-- 🏗️ **Multi-Stack Architecture** - Separate deployment lifecycles 
+- 🏗️ **Layered Architecture** - 5-layer dependency model with proper separation
 - 🔄 **CI/CD Ready** - GitHub Actions workflows for automated deployments
 - 🧩 **Reusable Components** - Modular AWS Pulumi components
 - 🧪 **Comprehensive Testing** - Jest with unit, integration, and e2e tests
 - 📝 **Code Quality** - ESLint + Prettier for consistent code style
-- 📚 **Documentation** - Complete infrastructure and deployment guides
+- 🌍 **Multi-Region** - Deploy across multiple AWS regions
+- 🔒 **Blue/Green Ready** - Zero-downtime deployment strategies
 
 ## 🚀 Quick Start
 
@@ -40,116 +41,263 @@ npm run setup
 # Configure AWS credentials
 aws configure
 
-# Deploy infrastructure (development environment)
+# Quick development preview
+npm run dev
+
+# Deploy full infrastructure to development
 npm run deploy:dev
 ```
+
+## 🏗️ Layered Architecture
+
+This project follows a 5-layer dependency model based on AWS best practices:
+
+```text
+  acct-baseline (Account-wide policies, roles, config rules)
+        ↓
+net-foundation (VPC, subnets, gateways, endpoints, certs)
+        ↓
+ ┌──────────────────┐
+ ↓                  ↓
+stateful-data    svc-platform (Clusters, service mesh, observability)
+        ↓
+     workload (Application services & blue/green deployments)
+```
+
+Each layer builds upon the previous one, ensuring proper dependency management and isolated failure domains.
 
 ## 📁 Project Structure
 
 ```text
 src/
-├── index.ts           # Main Pulumi automation API entry point
+├── index.ts           # Main Pulumi automation API orchestrator
 ├── components/        # Reusable AWS Pulumi components
-├── stacks/           # Multi-stack definitions (dev, val, prd)
+├── stacks/           # 5-layer stack definitions
+│   ├── acct-baseline.ts    # Account baseline
+│   ├── net-foundation.ts   # Network foundation
+│   ├── svc-platform.ts     # Service platform
+│   ├── stateful-data.ts    # Data storage
+│   └── workloads.ts        # Application workloads
 └── utils/            # Infrastructure utility functions
 
 .github/workflows/    # GitHub Actions CI/CD pipelines
-configs/             # Environment-based configurations
-test/               # Infrastructure and component tests
-docs/               # Infrastructure documentation
+test/                # Infrastructure and component tests
+docs/                # Architecture and deployment documentation
 ```
 
 ## 🛠️ Available Scripts
 
+### **Core Development**
+
+| Script              | Description                        |
+| ------------------- | ---------------------------------- |
+| `npm run dev`       | Quick development preview          |
+| `npm run start`     | Alias for `dev`                    |
+| `npm run build`     | Compile TypeScript to JavaScript  |
+| `npm run test`      | Run infrastructure tests           |
+| `npm run test:cov`  | Run tests with coverage            |
+| `npm run lint`      | Check and fix code quality         |
+| `npm run format`    | Format code with Prettier         |
+
+### **Environment Deployments**
+
 | Script                | Description                           |
 | --------------------- | ------------------------------------- |
-| `npm run deploy:dev`  | Deploy development infrastructure     |
-| `npm run deploy:val`  | Deploy validation infrastructure      |
-| `npm run deploy:prd`  | Deploy production infrastructure      |
-| `npm run destroy:dev` | Destroy development infrastructure    |
-| `npm run preview`     | Preview infrastructure changes        |
-| `npm run test`        | Run infrastructure tests              |
-| `npm run test:cov`    | Run tests with coverage               |
-| `npm run lint`        | Check code quality                    |
-| `npm run format`      | Format code                           |
+| `npm run deploy:dev`  | Deploy all layers to development     |
+| `npm run deploy:val`  | Deploy all layers to validation       |
+| `npm run deploy:prd`  | Deploy all layers to production       |
+| `npm run destroy:dev` | Destroy all layers in development    |
+| `npm run destroy:val` | Destroy all layers in validation     |
+| `npm run destroy:prd` | Destroy all layers in production     |
+| `npm run preview:dev` | Preview changes in development       |
+| `npm run preview:val` | Preview changes in validation        |
+| `npm run preview:prd` | Preview changes in production        |
 
-## 📖 Documentation
+### **Specialized Deployments**
 
-- [Infrastructure Guide](./docs/README.md) - Complete infrastructure deployment guide
-- [AWS Components](./docs/AWS-COMPONENTS.md) - Available AWS Pulumi components
-- [Multi-Stack Architecture](./docs/MULTI-STACK.md) - Environment management strategy
+| Script                    | Description                               |
+| ------------------------- | ----------------------------------------- |
+| `npm run deploy:foundation` | Deploy account baseline + networking   |
+| `npm run deploy:platform`   | Deploy foundation + services + data    |
+| `npm run destroy:platform`  | Destroy platform components only       |
+| `npm run deploy:multi-region` | Deploy across multiple regions        |
 
-## 🏗️ Infrastructure Components
+## 💻 Usage Examples
 
-The repository provides reusable AWS components for:
+### **Quick Development Workflow**
 
-```typescript
-import { WebAppStack, DatabaseStack, NetworkingStack } from './src/components';
+```bash
+# Start development - preview all infrastructure
+npm run dev
 
-// Deploy a complete web application infrastructure
-const webApp = new WebAppStack('my-app', {
-  environment: 'dev',
-  region: 'us-east-1'
-});
+# Deploy to development environment
+npm run deploy:dev
 
-// Use modular components
-const networking = new NetworkingStack('networking', {
-  cidr: '10.0.0.0/16'
-});
+# Make changes and preview
+npm run preview:dev
+
+# Deploy changes
+npm run deploy:dev
 ```
 
-## 🎯 What's Included
+### **Environment Promotion**
 
-### AWS Infrastructure Components
+```bash
+# 1. Test in development
+npm run deploy:dev
+npm run test
 
-- **VPC & Networking** - Secure network infrastructure with subnets and security groups
-- **Application Load Balancer** - High-availability load balancing
-- **ECS/Fargate Services** - Containerized application hosting
-- **RDS Databases** - Managed database solutions
-- **S3 Buckets** - Static asset storage and backups
-- **Route 53 DNS** - Domain management and routing
+# 2. Promote to validation
+npm run deploy:val
 
-### Multi-Environment Support
+# 3. Deploy to production
+npm run deploy:prd
+```
 
-- **Development (dev)** - Cost-optimized for development and testing
-- **Validation (val)** - Production-like environment for validation
-- **Production (prd)** - High-availability, scalable production setup
+### **Incremental Deployments**
 
-### CI/CD Pipeline
+```bash
+# Deploy just the foundation layers
+npm run deploy:foundation
 
-- **GitHub Actions** - Automated infrastructure deployment
-- **Environment Promotion** - Controlled deployment across environments
-- **Infrastructure Testing** - Validation of infrastructure changes
-- **Rollback Capabilities** - Safe deployment practices
+# Deploy platform components (foundation + services + data)
+npm run deploy:platform
+
+# Deploy specific layers using the orchestrator directly
+npx ts-node src/index.ts deploy dev --scope workload --regions us-east-1
+
+# Deploy to multiple regions
+npm run deploy:multi-region
+```
+
+### **Infrastructure Testing**
+
+```bash
+# Run all infrastructure tests
+npm run test
+
+# Run tests with coverage
+npm run test:cov
+
+# Run end-to-end tests
+npm run test:e2e
+
+# Validate project setup
+npm run validate
+```
+
+### **Custom Orchestration**
+
+For advanced use cases, use the orchestrator directly:
+
+```bash
+# Deploy specific layers
+npx ts-node src/index.ts deploy prd --scope acct-baseline,net-foundation --regions us-east-1
+
+# Multi-region deployment
+npx ts-node src/index.ts deploy prd --scope workload --regions us-east-1,us-west-2,eu-west-1
+
+# Preview changes with specific scope
+npx ts-node src/index.ts preview val --scope svc-platform,stateful-data --regions us-east-1
+```
+
+## 🎯 Layer Dependencies
+
+### **Account Baseline** (`acct-baseline`)
+- Account-wide IAM policies and roles
+- Config rules and compliance
+- CloudTrail and security settings
+- **Scope**: Per AWS Account
+
+### **Network Foundation** (`net-foundation`)
+- VPC, subnets, and routing
+- Internet/NAT gateways
+- VPC endpoints and certificates
+- **Scope**: Per Region
+
+### **Service Platform** (`svc-platform`)
+- EKS/ECS clusters
+- Service mesh configuration
+- Platform observability
+- **Scope**: Per Region
+
+### **Stateful Data** (`stateful-data`)
+- RDS databases
+- ElastiCache clusters
+- S3 buckets and storage
+- **Scope**: Per Region
+
+### **Workload** (`workload`)
+- Application services
+- Blue/green deployments
+- Application-specific resources
+- **Scope**: Per Region
 
 ## 🔧 Environment Configuration
 
-The infrastructure supports environment-based configuration:
+The infrastructure supports environment-based configuration with different resource sizing and features:
 
 ```typescript
-// configs/dev.ts
-export const devConfig = {
+// Development environment
+const devConfig = {
   region: 'us-east-1',
   instanceType: 't3.micro',
   minCapacity: 1,
-  maxCapacity: 2
+  maxCapacity: 2,
+  multiAz: false
 };
 
-// configs/prd.ts
-export const prdConfig = {
+// Production environment
+const prdConfig = {
   region: 'us-east-1',
   instanceType: 't3.large',
   minCapacity: 2,
-  maxCapacity: 10
+  maxCapacity: 10,
+  multiAz: true
 };
 ```
 
-## 🚦 Deployment Workflow
+## 🚦 Deployment Strategies
 
-1. **Development** - Deploy and test infrastructure changes in dev environment
-2. **Validation** - Promote changes to validation environment for testing
-3. **Production** - Deploy validated changes to production environment
-4. **Monitoring** - Track infrastructure health and performance
+### **Blue/Green Deployments**
+
+The architecture supports both cluster-level and service-level blue/green deployments:
+
+```bash
+# Deploy new version (blue)
+npm run deploy:dev
+
+# Switch traffic and verify
+# Deploy green version
+npx ts-node src/index.ts deploy dev --scope workload --regions us-east-1
+
+# Destroy old version after validation
+npx ts-node src/index.ts destroy dev --scope workload --regions us-east-1 --target blue
+```
+
+### **Multi-Region Strategy**
+
+```bash
+# Deploy to primary region
+npm run deploy:prd
+
+# Deploy to secondary regions
+npx ts-node src/index.ts deploy prd --scope net-foundation,svc-platform,stateful-data,workload --regions us-west-2,eu-west-1
+```
+
+## 📖 Documentation
+
+- [Software Architecture](./docs/SOFTWARE_ARCHITECTURE.md) - Complete architectural overview
+- [Infrastructure Guide](./docs/README.md) - Detailed deployment guide
+- [Testing Architecture](./docs/TESTING_ARCHITECTURE.md) - Testing strategies and patterns
+
+## 🔒 Security & Compliance
+
+- **Least Privilege**: IAM roles with minimal required permissions
+- **Encryption**: All data encrypted at rest and in transit
+- **Network Security**: VPC with proper subnet isolation
+- **Compliance**: AWS Config rules for governance
+- **Monitoring**: CloudTrail and CloudWatch for observability
 
 ## 📄 License
 
@@ -158,5 +306,5 @@ UNLICENSED - Free to use for any purpose
 ---
 
 <p align="center">
-  <em>Happy coding! 🎉</em>
+  <em>Happy coding! 🚀</em>
 </p>
