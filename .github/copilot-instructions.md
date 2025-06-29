@@ -45,6 +45,18 @@ docs/              # Infrastructure documentation
 
 ## Coding Standards & Best Practices
 
+### General Code Style
+
+- Use single quotes for all strings.
+- Semicolon is required at the end of every statement.
+- Indentation must be 4 spaces.
+- Always prefer async/await for asynchronous operations; avoid callbacks.
+- Follow Prettier and ESLint configurations for consistent code style.
+- Include proper error handling for all async operations.
+- Avoid mutable state where possible; prefer immutable patterns.
+- Ensure code is well-tested with appropriate unit and integration tests.
+- Prefer Pulumi custom components to encapsulate resources for reusability and maintainability.
+
 ### TypeScript Guidelines
 
 - **Strict Mode**: Always use strict TypeScript settings (enabled in tsconfig.json)
@@ -100,11 +112,6 @@ export class VpcComponent extends pulumi.ComponentResource {
 export default VpcComponent;
 ```
 
-// Default export (if applicable)
-export default VpcComponent;
-
-````
-
 ## Development Workflow
 
 ### Available Scripts
@@ -145,7 +152,7 @@ describe('VpcComponent', () => {
         // ...
     });
 });
-````
+```
 
 ## Code Generation Guidelines
 
