@@ -285,6 +285,16 @@ npm run deploy:prd
 npx ts-node src/index.ts deploy prd --scope net-foundation,svc-platform,stateful-data,workload --regions us-west-2,eu-west-1
 ```
 
+## 🗝️ Pulumi State Backend Setup
+
+To use a self-managed Pulumi state backend (such as AWS S3 or local filesystem), use the provided login script:
+
+```bash
+./scripts/pulumi-login.sh
+```
+
+This script will prompt you to select and configure your preferred backend for storing Pulumi state files. For AWS projects, S3 is recommended for team use.
+
 ## 📖 Documentation
 
 - [Software Architecture](./docs/SOFTWARE_ARCHITECTURE.md) - Complete architectural overview

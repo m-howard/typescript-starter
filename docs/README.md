@@ -336,6 +336,16 @@ The repository includes GitHub Actions workflows for:
 - **Infrastructure Drift Detection**: Monitor and alert on configuration drift
 - **Security Scanning**: Scan infrastructure code for security vulnerabilities
 
+## Pulumi State Backend Setup
+
+To configure your Pulumi state backend (S3 or local), use the helper script:
+
+```bash
+./scripts/pulumi-login.sh
+```
+
+This script will prompt you to select and configure your preferred backend for storing Pulumi state files. S3 is recommended for AWS projects and team collaboration.
+
 ## Contributing
 
 1. Follow the existing infrastructure patterns and naming conventions
