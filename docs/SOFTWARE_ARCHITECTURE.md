@@ -16,28 +16,28 @@ This document outlines the complete software architecture design for an infrastr
 
 ## 🗂️ Projects Overview
 
-| Project Folder      | Purpose                                        | Scope           |
-| ------------------- | ---------------------------------------------- | --------------- |
-| `10-acct-baseline`  | Account-wide policies, roles, config rules     | Per AWS Account |
-| `20-net-foundation` | VPC, subnets, gateways, endpoints, certs       | Per Region      |
-| `30-svc-platform`   | Clusters, service mesh, platform observability | Per Region      |
-| `40-data-stateful`  | Data storage systems                           | Per Region      |
-| `50-workload`       | Application services & blue/green deployments  | Per Region      |
+| Project File     | Purpose                                        | Scope           |
+| ---------------- | ---------------------------------------------- | --------------- |
+| `acct-baseline`  | Account-wide policies, roles, config rules     | Per AWS Account |
+| `net-foundation` | VPC, subnets, gateways, endpoints, certs       | Per Region      |
+| `svc-platform`   | Clusters, service mesh, platform observability | Per Region      |
+| `stateful-data`  | Data storage systems                           | Per Region      |
+| `workload`       | Application services & blue/green deployments  | Per Region      |
 
 ---
 
 ## 🧱 Stack Dependency Graph
 
 ```text
-10-acct-baseline
+  acct-baseline
         ↓
-20-net-foundation (region-specific)
+net-foundation (region-specific)
         ↓
- ┌────────────┐
- ↓            ↓
-40-data-stateful    30-svc-platform
+ ┌──────────────────┐
+ ↓                  ↓
+data-stateful    svc-platform
         ↓
-   50-workload
+     workload
 ```
 
 > Each arrow indicates a dependency via `StackReference` (read-only).
@@ -57,18 +57,18 @@ A central `orchestrator` project uses the Pulumi Automation API to:
 ### Sample CLI
 
 ```bash
-node index.js deploy dev --scope 30-svc-platform,50-workload --regions us-east-1
+node index.js deploy dev --scope svc-platform,workload --regions us-east-1
 ```
 
 ### Rollout Order (Creation)
 
 ```ts
 [
-  '10-acct-baseline',
-  '20-net-foundation',
-  '40-data-stateful',
-  '30-svc-platform',
-  '50-workload'
+  'acct-baseline',
+  'net-foundation',
+  'svc-platform',
+  'data-stateful',
+  'workload'
 ]
 ```
 
