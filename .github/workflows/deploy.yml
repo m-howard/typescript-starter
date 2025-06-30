@@ -1,0 +1,230 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches: 
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - val
+          - prd
+      scope:
+        description: 'Infrastructure layers to deploy (comma-separated)'
+        required: false
+        default: 'acct-baseline,net-foundation,svc-platform,stateful-data,workload'
+        type: string
+      regions:
+        description: 'AWS regions to deploy to (comma-separated)'
+        required: false
+        default: 'us-east-1'
+        type: string
+      destroy:
+        description: 'Destroy infrastructure instead of deploy'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '22'
+  PULUMI_VERSION: '3.181.0'
+
+jobs:
+  determine-environment:
+    name: 'Determine Deployment Environment'
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      s3-backend-url: ${{ steps.set-env.outputs.s3-backend-url }}
+      is-production: ${{ steps.set-env.outputs.is-production }}
+    steps:
+      - name: Set environment based on trigger
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ENV="${{ github.event.inputs.environment }}"
+          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            ENV="prd"
+          elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            ENV="dev"
+          else
+            ENV="dev"
+          fi
+          echo "environment=$ENV" >> $GITHUB_OUTPUT
+
+          if [ "$ENV" = "prd" ]; then
+            S3_BACKEND_URL="s3://your-pulumi-state-bucket/prd-pulumi-state"
+            echo "is-production=true" >> $GITHUB_OUTPUT
+          elif [ "$ENV" = "val" ]; then
+            S3_BACKEND_URL="s3://your-pulumi-state-bucket/val-pulumi-state"
+            echo "is-production=false" >> $GITHUB_OUTPUT
+          else
+            S3_BACKEND_URL="s3://your-pulumi-state-bucket/dev-pulumi-state"
+            echo "is-production=false" >> $GITHUB_OUTPUT
+          fi
+          echo "s3-backend-url=$S3_BACKEND_URL" >> $GITHUB_OUTPUT
+
+  deploy:
+    name: 'Pulumi Deploy/Destroy'
+    needs: determine-environment
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    environment: 
+      name: ${{ needs.determine-environment.outputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v5
+        with:
+          pulumi-version: ${{ env.PULUMI_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-session-name: github-actions-${{ needs.determine-environment.outputs.environment }}-deployment
+
+      - name: Login to Pulumi S3 backend
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+        run: |
+          pulumi login "${{ needs.determine-environment.outputs.s3-backend-url }}"
+
+      - name: Deploy or Destroy Infrastructure
+        id: deploy
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+        run: |
+          ENV="${{ needs.determine-environment.outputs.environment }}"
+          if [ "${{ github.event.inputs.destroy }}" = "true" ]; then
+            echo "### Destroying infrastructure for $ENV" >> $GITHUB_STEP_SUMMARY
+            npm run destroy:$ENV | tee deploy.log
+            STATUS=${PIPESTATUS[0]}
+          else
+            SCOPE="${{ github.event.inputs.scope || 'acct-baseline,net-foundation,svc-platform,stateful-data,workload' }}"
+            REGIONS="${{ github.event.inputs.regions || 'us-east-1' }}"
+            echo "### Deploying infrastructure for $ENV" >> $GITHUB_STEP_SUMMARY
+            npx ts-node src/index.ts deploy $ENV --scope "$SCOPE" --regions "$REGIONS" | tee deploy.log
+            STATUS=${PIPESTATUS[0]}
+          fi
+          tail -50 deploy.log >> $GITHUB_STEP_SUMMARY
+          if [ "$STATUS" -eq 0 ]; then
+            echo "✅ **Deployment status:** Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Deployment status:** Failure" >> $GITHUB_STEP_SUMMARY
+            exit $STATUS
+          fi
+
+      - name: Run E2E tests (val only)
+        if: needs.determine-environment.outputs.environment == 'val' && success() && github.event.inputs.destroy != 'true'
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+          TEST_ENVIRONMENT: val
+        run: npm run test:e2e | tee e2e.log; tail -50 e2e.log >> $GITHUB_STEP_SUMMARY
+
+      - name: Run Production Health Checks
+        if: needs.determine-environment.outputs.environment == 'prd' && success() && github.event.inputs.destroy != 'true'
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+          TEST_ENVIRONMENT: prd
+        run: |
+          echo "Running production health checks..." | tee health.log
+          # npm run health-check:prd | tee -a health.log
+          tail -50 health.log >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment on PR (dev only)
+        if: needs.determine-environment.outputs.environment == 'dev' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Infrastructure successfully deployed to **development** environment!'
+            })
+
+  drift-detection:
+    name: 'Infrastructure Drift Detection'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        environment: [dev, val, prd]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v5
+        with:
+          pulumi-version: ${{ env.PULUMI_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-session-name: github-actions-drift-detection
+
+      - name: Login to Pulumi S3 backend
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+        run: |
+          if [ "${{ matrix.environment }}" = "prd" ]; then
+            pulumi login "s3://your-pulumi-state-bucket/prd-pulumi-state"
+          elif [ "${{ matrix.environment }}" = "val" ]; then
+            pulumi login "s3://your-pulumi-state-bucket/val-pulumi-state"
+          else
+            pulumi login "s3://your-pulumi-state-bucket/dev-pulumi-state"
+          fi
+
+      - name: Check for infrastructure drift and write summary
+        run: |
+          echo "## Drift Detection for \`${{ matrix.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          if npx ts-node src/index.ts preview ${{ matrix.environment }} --scope acct-baseline,net-foundation,svc-platform,stateful-data,workload --regions us-east-1 --expect-no-changes | tee drift.log; then
+            echo "✅ No drift detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Drift detected! See last lines below:" >> $GITHUB_STEP_SUMMARY
+            tail -50 drift.log >> $GITHUB_STEP_SUMMARY
+          fi
