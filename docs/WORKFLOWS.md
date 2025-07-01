@@ -2,7 +2,6 @@
 
 This document describes the automated workflows for CI/CD and infrastructure management in this repository, as implemented in `.github/workflows/`.
 
-
 ## Prerequisites & Setup
 
 Before running these workflows, ensure the following are set up in your repository and AWS account:
@@ -34,15 +33,16 @@ Before running these workflows, ensure the following are set up in your reposito
 
 The repository uses GitHub Actions to automate code quality checks, security scanning, testing, and AWS infrastructure deployment with Pulumi. The workflows are designed for a robust, multi-environment AWS IaC pipeline, supporting development (`dev`), validation (`val`), and production (`prd`) lifecycles.
 
-
 ## Workflows
 
 ### 1. Continuous Integration (`ci.yml`)
 
 **Triggers:**
+
 - On push or pull request to `main` or `develop` branches.
 
 **Jobs:**
+
 - **Lint:** Installs dependencies, builds TypeScript, runs ESLint and Prettier, and checks for uncommitted changes.
 - **Security:** Runs `npm audit` for high-severity vulnerabilities.
 - **Test:** Runs unit tests with coverage and uploads results to Codecov.
@@ -51,10 +51,12 @@ The repository uses GitHub Actions to automate code quality checks, security sca
 ### 2. Deployment (`deploy.yml`)
 
 **Triggers:**
+
 - On push to `main` or `develop`.
 - Manually via `workflow_dispatch` (with environment, scope, regions, and destroy options).
 
 **Jobs:**
+
 - **Determine Environment:** Sets deployment environment (`dev`, `val`, `prd`) and Pulumi S3 backend URL based on branch or workflow input.
 - **Deploy/Destroy:** Installs dependencies, builds, configures AWS credentials, logs into Pulumi S3 backend, and either deploys or destroys infrastructure using Pulumi Automation API. Runs E2E tests for `val` environment after deployment. Runs production health checks for `prd` after deployment. Comments on PRs for successful `dev` deployments.
 - **Drift Detection:** On schedule or manual trigger, checks for infrastructure drift in all environments using Pulumi preview with `--expect-no-changes`.
@@ -62,10 +64,12 @@ The repository uses GitHub Actions to automate code quality checks, security sca
 ### 3. Nightly Cleanup (`cleanup.yml`)
 
 **Triggers:**
+
 - Scheduled daily at 7 AM UTC.
 - Manually via `workflow_dispatch` (with environment selection).
 
 **Jobs:**
+
 - **Destroy Pulumi Stacks:** For `dev` and `val` environments, installs dependencies, configures AWS credentials, logs into Pulumi S3 backend, and destroys all stacks for the environment.
 
 ## Key Features

@@ -5,7 +5,7 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-    { ignores: ['bin', 'node_modules', 'docs', '**/*.js'] },
+    { ignores: ['bin', 'node_modules', 'docs', 'coverage', '**/*.js'] },
     { files: ['**/*.{mjs,cjs,ts}'] },
     {
         languageOptions: {
@@ -13,7 +13,7 @@ export default [
                 ...globals.node,
                 ...globals.jest,
             },
-        }
+        },
     },
     {
         rules: {

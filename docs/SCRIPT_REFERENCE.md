@@ -4,11 +4,11 @@ Quick reference for all available npm scripts in the AWS Pulumi Infrastructure p
 
 ## 🚀 Quick Start Scripts
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Quick development preview of all infrastructure |
-| `npm run deploy:dev` | Deploy everything to development environment |
-| `npm run test` | Run all infrastructure tests |
+| Script               | Description                                     |
+| -------------------- | ----------------------------------------------- |
+| `npm run dev`        | Quick development preview of all infrastructure |
+| `npm run deploy:dev` | Deploy everything to development environment    |
+| `npm run test`       | Run all infrastructure tests                    |
 
 ## 📋 All Available Scripts
 
@@ -35,7 +35,7 @@ npm run start:prod       # Run compiled application
 ```bash
 # Deploy to environments
 npm run deploy:dev       # Deploy all layers to development
-npm run deploy:val       # Deploy all layers to validation  
+npm run deploy:val       # Deploy all layers to validation
 npm run deploy:prd       # Deploy all layers to production
 
 # Destroy environments
@@ -117,12 +117,12 @@ npx ts-node src/index.ts destroy dev --scope workload --regions us-east-1
 
 ## 📊 Script Comparison
 
-| Task | Old (80+ scripts) | New (26 scripts) |
-|------|-------------------|------------------|
-| Deploy all to dev | `deploy:all:dev` | `deploy:dev` |
-| Individual layer | `deploy:layer:env` | Custom orchestrator |
-| Multi-environment | 15 scripts per action | 3 scripts per action |
-| Foundation only | `deploy:foundation:env` | `deploy:foundation` |
+| Task              | Old (80+ scripts)       | New (26 scripts)     |
+| ----------------- | ----------------------- | -------------------- |
+| Deploy all to dev | `deploy:all:dev`        | `deploy:dev`         |
+| Individual layer  | `deploy:layer:env`      | Custom orchestrator  |
+| Multi-environment | 15 scripts per action   | 3 scripts per action |
+| Foundation only   | `deploy:foundation:env` | `deploy:foundation`  |
 
 ## 💡 Pro Tips
 

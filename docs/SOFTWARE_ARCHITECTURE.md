@@ -6,11 +6,11 @@ This document outlines the complete software architecture design for an infrastr
 
 ## 🔧 Design Principles
 
-* **Modularity**: Separate infrastructure concerns across clearly defined projects.
-* **Least Privilege**: Scope stack permissions and updates to the smallest possible blast radius.
-* **Layered Dependency**: Projects are applied in strict top-down order and destroyed bottom-up.
-* **Blue/Green Ready**: Application and compute stacks are designed for zero-downtime switchovers.
-* **Automation-Friendly**: Driven by Pulumi Automation API for CI/CD orchestration.
+- **Modularity**: Separate infrastructure concerns across clearly defined projects.
+- **Least Privilege**: Scope stack permissions and updates to the smallest possible blast radius.
+- **Layered Dependency**: Projects are applied in strict top-down order and destroyed bottom-up.
+- **Blue/Green Ready**: Application and compute stacks are designed for zero-downtime switchovers.
+- **Automation-Friendly**: Driven by Pulumi Automation API for CI/CD orchestration.
 
 ---
 
@@ -48,11 +48,11 @@ data-stateful    svc-platform
 
 A central `orchestrator` project uses the Pulumi Automation API to:
 
-* Accept CLI arguments (`deploy|preview|destroy`, env, scope, regions)
-* Determine rollout order
-* Create/select stack for each project-layer
-* Refresh, configure, and execute action
-* Parallelize independent region stacks
+- Accept CLI arguments (`deploy|preview|destroy`, env, scope, regions)
+- Determine rollout order
+- Create/select stack for each project-layer
+- Refresh, configure, and execute action
+- Parallelize independent region stacks
 
 ### Sample CLI
 
@@ -63,13 +63,7 @@ node index.js deploy dev --scope svc-platform,workload --regions us-east-1
 ### Rollout Order (Creation)
 
 ```ts
-[
-  'acct-baseline',
-  'net-foundation',
-  'svc-platform',
-  'data-stateful',
-  'workload'
-]
+['acct-baseline', 'net-foundation', 'svc-platform', 'data-stateful', 'workload'];
 ```
 
 ### Stack Naming Convention
@@ -98,15 +92,15 @@ All secrets are encrypted using Pulumi’s secret provider.
 
 ### Cluster-Level
 
-* Duplicate entire cluster (EKS/ECS) in `30-svc-platform`
-* Route traffic switch via ALB/NLB or Route53
+- Duplicate entire cluster (EKS/ECS) in `30-svc-platform`
+- Route traffic switch via ALB/NLB or Route53
 
 ### Service-Level
 
-* Parameterize `color` (blue/green)
-* Deploy both stacks
-* Swap DNS/ALB
-* Destroy stale color via `--target`
+- Parameterize `color` (blue/green)
+- Deploy both stacks
+- Swap DNS/ALB
+- Destroy stale color via `--target`
 
 ---
 
@@ -114,18 +108,18 @@ All secrets are encrypted using Pulumi’s secret provider.
 
 1. **Pull Request**:
 
-   * Lint + Preview via Automation API
-   * Scope to impacted layers
+    - Lint + Preview via Automation API
+    - Scope to impacted layers
 
 2. **Merge to Main**:
 
-   * Run orchestrator with `deploy`
-   * Blue/Green switch + health validation
-   * Destroy stale resources
+    - Run orchestrator with `deploy`
+    - Blue/Green switch + health validation
+    - Destroy stale resources
 
 3. **Scheduled Weekly Jobs**:
 
-   * Refresh + diff-only preview for `10-20` stable layers
+    - Refresh + diff-only preview for `10-20` stable layers
 
 ---
 
@@ -146,10 +140,10 @@ Each stack includes the following tags:
 
 ## ✅ Benefits
 
-* Predictable deployments with minimal drift
-* Fast iteration on services, slow change to foundational layers
-* Isolated failure domains
-* Team-level ownership mapping directly to project folders
+- Predictable deployments with minimal drift
+- Fast iteration on services, slow change to foundational layers
+- Isolated failure domains
+- Team-level ownership mapping directly to project folders
 
 ---
 

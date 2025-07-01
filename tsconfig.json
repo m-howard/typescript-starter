@@ -19,7 +19,7 @@
         "noFallthroughCasesInSwitch": true,
         "noImplicitReturns": true,
         "noUnusedLocals": true,
-        "noUnusedParameters": true,
+        "noUnusedParameters": true
     },
     "include": ["src"],
     "exclude": ["node_modules", "bin", "tests", "docs", "scripts"]

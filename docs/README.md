@@ -23,26 +23,31 @@ stateful-data    svc-platform (Clusters, service mesh, observability)
 ### Layer Details
 
 #### Account Baseline (`acct-baseline`)
+
 - **Purpose**: Account-wide policies, roles, config rules
 - **Scope**: Per AWS Account
 - **Contains**: IAM policies, CloudTrail, Config rules, compliance settings
 
 #### Network Foundation (`net-foundation`)
+
 - **Purpose**: VPC, subnets, gateways, endpoints, certificates
 - **Scope**: Per Region
 - **Contains**: VPC, subnets, NAT gateways, VPC endpoints, ACM certificates
 
 #### Service Platform (`svc-platform`)
+
 - **Purpose**: Clusters, service mesh, platform observability
 - **Scope**: Per Region
 - **Contains**: EKS/ECS clusters, service mesh, monitoring infrastructure
 
 #### Stateful Data (`stateful-data`)
+
 - **Purpose**: Data storage systems
 - **Scope**: Per Region
 - **Contains**: RDS databases, ElastiCache, S3 buckets, data stores
 
 #### Workload (`workload`)
+
 - **Purpose**: Application services & blue/green deployments
 - **Scope**: Per Region
 - **Contains**: Application services, load balancers, auto-scaling groups
@@ -293,13 +298,13 @@ Example infrastructure test:
 
 ```typescript
 describe('VPC Component', () => {
-  it('should create VPC with correct CIDR block', async () => {
-    const vpc = new VpcComponent('test-vpc', {
-      cidrBlock: '10.0.0.0/16'
+    it('should create VPC with correct CIDR block', async () => {
+        const vpc = new VpcComponent('test-vpc', {
+            cidrBlock: '10.0.0.0/16',
+        });
+
+        expect(vpc.vpc.cidrBlock).toBe('10.0.0.0/16');
     });
-    
-    expect(vpc.vpc.cidrBlock).toBe('10.0.0.0/16');
-  });
 });
 ```
 
@@ -310,20 +315,20 @@ The project uses environment-based configuration files:
 ```typescript
 // configs/dev.ts
 export const devConfig = {
-  region: 'us-east-1',
-  environment: 'dev',
-  vpc: {
-    cidrBlock: '10.0.0.0/16'
-  },
-  ecs: {
-    instanceType: 't3.micro',
-    minCapacity: 1,
-    maxCapacity: 2
-  },
-  rds: {
-    instanceClass: 'db.t3.micro',
-    allocatedStorage: 20
-  }
+    region: 'us-east-1',
+    environment: 'dev',
+    vpc: {
+        cidrBlock: '10.0.0.0/16',
+    },
+    ecs: {
+        instanceType: 't3.micro',
+        minCapacity: 1,
+        maxCapacity: 2,
+    },
+    rds: {
+        instanceClass: 'db.t3.micro',
+        allocatedStorage: 20,
+    },
 };
 ```
 

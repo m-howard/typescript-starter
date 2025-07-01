@@ -64,10 +64,10 @@ docs/              # Infrastructure documentation
 - **Null Safety**: Use strict null checks, prefer optional chaining (`?.`)
 - **Interfaces vs Types**: Use interfaces for object shapes, types for unions/primitives
 - **Naming Conventions**:
-  - Classes: PascalCase (`VpcComponent`, `EcsService`)
-  - Functions/Variables: camelCase (`createVpc`, `isValid`)
-  - Constants: UPPER_SNAKE_CASE (`DEFAULT_REGION`, `MAX_RETRY_ATTEMPTS`)
-  - Files: kebab-case (`vpc-component.ts`) or camelCase (`vpcComponent.ts`)
+    - Classes: PascalCase (`VpcComponent`, `EcsService`)
+    - Functions/Variables: camelCase (`createVpc`, `isValid`)
+    - Constants: UPPER_SNAKE_CASE (`DEFAULT_REGION`, `MAX_RETRY_ATTEMPTS`)
+    - Files: kebab-case (`vpc-component.ts`) or camelCase (`vpcComponent.ts`)
 
 ### Infrastructure Organization
 
@@ -103,7 +103,7 @@ export class VpcComponent extends pulumi.ComponentResource {
 
     constructor(name: string, args: VpcArgs, opts?: pulumi.ComponentResourceOptions) {
         super('aws:networking:VpcComponent', name, {}, opts);
-        
+
         // Implementation
     }
 }
@@ -117,6 +117,7 @@ export default VpcComponent;
 ### Available Scripts
 
 #### Core Development
+
 - `npm run dev` - Quick development preview of all infrastructure layers
 - `npm run start` - Alias for `dev`
 - `npm run build` - Compile TypeScript to JavaScript
@@ -128,6 +129,7 @@ export default VpcComponent;
 - `npm run format` - Format code with Prettier
 
 #### Environment Deployments
+
 - `npm run deploy:dev` - Deploy all layers to development environment
 - `npm run deploy:val` - Deploy all layers to validation environment
 - `npm run deploy:prd` - Deploy all layers to production environment
@@ -139,13 +141,16 @@ export default VpcComponent;
 - `npm run preview:prd` - Preview changes in production
 
 #### Specialized Deployments
+
 - `npm run deploy:foundation` - Deploy account baseline + networking layers
 - `npm run deploy:platform` - Deploy foundation + services + data layers
 - `npm run destroy:platform` - Destroy platform components only
 - `npm run deploy:multi-region` - Deploy across multiple regions
 
 #### Custom Orchestration
+
 For advanced scenarios, use the orchestrator directly:
+
 ```bash
 # Deploy specific layers
 npx ts-node src/index.ts deploy prd --scope acct-baseline,net-foundation --regions us-east-1
@@ -207,7 +212,7 @@ export class EcsServiceComponent extends pulumi.ComponentResource {
         name: string,
         args: EcsServiceArgs,
         dependencies: EcsServiceDependencies,
-        opts?: pulumi.ComponentResourceOptions
+        opts?: pulumi.ComponentResourceOptions,
     ) {
         super('aws:compute:EcsServiceComponent', name, {}, opts);
 
@@ -218,7 +223,7 @@ export class EcsServiceComponent extends pulumi.ComponentResource {
         this.registerOutputs({
             service: this.service,
             taskDefinition: this.taskDefinition,
-            targetGroup: this.targetGroup
+            targetGroup: this.targetGroup,
         });
     }
 

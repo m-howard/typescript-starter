@@ -89,38 +89,38 @@ docs/                # Architecture and deployment documentation
 
 ### **Core Development**
 
-| Script              | Description                        |
-| ------------------- | ---------------------------------- |
-| `npm run dev`       | Quick development preview          |
-| `npm run start`     | Alias for `dev`                    |
-| `npm run build`     | Compile TypeScript to JavaScript  |
-| `npm run test`      | Run infrastructure tests           |
-| `npm run test:cov`  | Run tests with coverage            |
-| `npm run lint`      | Check and fix code quality         |
-| `npm run format`    | Format code with Prettier         |
+| Script             | Description                      |
+| ------------------ | -------------------------------- |
+| `npm run dev`      | Quick development preview        |
+| `npm run start`    | Alias for `dev`                  |
+| `npm run build`    | Compile TypeScript to JavaScript |
+| `npm run test`     | Run infrastructure tests         |
+| `npm run test:cov` | Run tests with coverage          |
+| `npm run lint`     | Check and fix code quality       |
+| `npm run format`   | Format code with Prettier        |
 
 ### **Environment Deployments**
 
-| Script                | Description                           |
-| --------------------- | ------------------------------------- |
-| `npm run deploy:dev`  | Deploy all layers to development     |
-| `npm run deploy:val`  | Deploy all layers to validation       |
-| `npm run deploy:prd`  | Deploy all layers to production       |
-| `npm run destroy:dev` | Destroy all layers in development    |
-| `npm run destroy:val` | Destroy all layers in validation     |
-| `npm run destroy:prd` | Destroy all layers in production     |
-| `npm run preview:dev` | Preview changes in development       |
-| `npm run preview:val` | Preview changes in validation        |
-| `npm run preview:prd` | Preview changes in production        |
+| Script                | Description                       |
+| --------------------- | --------------------------------- |
+| `npm run deploy:dev`  | Deploy all layers to development  |
+| `npm run deploy:val`  | Deploy all layers to validation   |
+| `npm run deploy:prd`  | Deploy all layers to production   |
+| `npm run destroy:dev` | Destroy all layers in development |
+| `npm run destroy:val` | Destroy all layers in validation  |
+| `npm run destroy:prd` | Destroy all layers in production  |
+| `npm run preview:dev` | Preview changes in development    |
+| `npm run preview:val` | Preview changes in validation     |
+| `npm run preview:prd` | Preview changes in production     |
 
 ### **Specialized Deployments**
 
-| Script                    | Description                               |
-| ------------------------- | ----------------------------------------- |
-| `npm run deploy:foundation` | Deploy account baseline + networking   |
-| `npm run deploy:platform`   | Deploy foundation + services + data    |
-| `npm run destroy:platform`  | Destroy platform components only       |
-| `npm run deploy:multi-region` | Deploy across multiple regions        |
+| Script                        | Description                          |
+| ----------------------------- | ------------------------------------ |
+| `npm run deploy:foundation`   | Deploy account baseline + networking |
+| `npm run deploy:platform`     | Deploy foundation + services + data  |
+| `npm run destroy:platform`    | Destroy platform components only     |
+| `npm run deploy:multi-region` | Deploy across multiple regions       |
 
 ## 💻 Usage Examples
 
@@ -204,30 +204,35 @@ npx ts-node src/index.ts preview val --scope svc-platform,stateful-data --region
 ## 🎯 Layer Dependencies
 
 ### **Account Baseline** (`acct-baseline`)
+
 - Account-wide IAM policies and roles
 - Config rules and compliance
 - CloudTrail and security settings
 - **Scope**: Per AWS Account
 
 ### **Network Foundation** (`net-foundation`)
+
 - VPC, subnets, and routing
 - Internet/NAT gateways
 - VPC endpoints and certificates
 - **Scope**: Per Region
 
 ### **Service Platform** (`svc-platform`)
+
 - EKS/ECS clusters
 - Service mesh configuration
 - Platform observability
 - **Scope**: Per Region
 
 ### **Stateful Data** (`stateful-data`)
+
 - RDS databases
 - ElastiCache clusters
 - S3 buckets and storage
 - **Scope**: Per Region
 
 ### **Workload** (`workload`)
+
 - Application services
 - Blue/green deployments
 - Application-specific resources
@@ -240,20 +245,20 @@ The infrastructure supports environment-based configuration with different resou
 ```typescript
 // Development environment
 const devConfig = {
-  region: 'us-east-1',
-  instanceType: 't3.micro',
-  minCapacity: 1,
-  maxCapacity: 2,
-  multiAz: false
+    region: 'us-east-1',
+    instanceType: 't3.micro',
+    minCapacity: 1,
+    maxCapacity: 2,
+    multiAz: false,
 };
 
 // Production environment
 const prdConfig = {
-  region: 'us-east-1',
-  instanceType: 't3.large',
-  minCapacity: 2,
-  maxCapacity: 10,
-  multiAz: true
+    region: 'us-east-1',
+    instanceType: 't3.large',
+    minCapacity: 2,
+    maxCapacity: 10,
+    multiAz: true,
 };
 ```
 
