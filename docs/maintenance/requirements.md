@@ -256,26 +256,31 @@ a known target.
 
 ## Traceability
 
-Completed at implementation step 13. Every row must resolve in both directions:
-a requirement with no verifying spec is untested, and a spec citing an id that
-no longer exists is stale. Verified by grepping ids across `src/maintenance/`
-and `test/`.
+Every row resolves in both directions: a requirement with no verifying spec is
+untested, and a spec citing an id that no longer exists is stale. Both
+directions were checked by grepping every `REQ-` id across
+`docs/maintenance/requirements.md`, `src/` and `test/`. There are no stale
+citations, and every requirement outside the `P2` block is cited by at least
+one module or spec.
 
-| Requirement | Implemented in | Verified by |
+Requirement ids appear in the test titles that verify them, so the table below
+is checkable with `grep -rn REQ-<id> test/` rather than by reading.
+
+| Requirement | Implemented in `src/maintenance/` | Verified by |
 | --- | --- | --- |
-| REQ-SCH-001…010 | `schema/report.ts`, `schema/json-schema.ts`, `collectors/build-finding.ts` | `test/maintenance-schema.spec.ts`, `test/maintenance-json-schema.spec.ts`, `test/maintenance-build-finding.spec.ts` |
-| REQ-EVI-001…006 | `schema/common.ts`, all collectors | `test/maintenance-schema.spec.ts`, per-collector specs |
-| REQ-ID-001…007 | `identity/fingerprint.ts` | `test/maintenance-fingerprint.spec.ts` |
-| REQ-SEV-001…056 | `severity/rules.ts`, `severity/facts.ts` | `test/maintenance-severity.spec.ts` |
-| REQ-CFG-001…007 | `schema/config.ts`, `config/load-config.ts` | `test/maintenance-config.spec.ts` |
-| REQ-NET-020…027 | `http/http-client.ts`, `http/offline-http-client.ts`, `sources/source-registry.ts` | `test/maintenance-http-client.spec.ts`, `test/maintenance-sources.spec.ts` |
-| REQ-ERR-030…037 | `collectors/collector.ts`, `errors.ts` | `test/maintenance-runner.spec.ts` |
-| REQ-RPT-001…007 | `runner.ts` | `test/maintenance-runner.spec.ts` |
+| REQ-SCH-001…010 | `schema/finding.ts`, `schema/common.ts`, `schema/enriched-finding.ts`, `schema/json-schema.ts`, `collectors/build-finding.ts` | `test/maintenance-schema.spec.ts`, `test/maintenance-json-schema.spec.ts`, `test/maintenance-build-finding.spec.ts`, `test/maintenance.e2e.spec.ts` |
+| REQ-EVI-001…006 | `schema/common.ts`, `sources/evidence.ts`, `text/line-index.ts`, every collector | `test/maintenance-schema.spec.ts`, `test/maintenance-line-index.spec.ts`, the per-collector specs, `test/maintenance.e2e.spec.ts` |
+| REQ-ID-001…007 | `identity/fingerprint.ts`, `collectors/build-finding.ts` | `test/maintenance-fingerprint.spec.ts`, `test/maintenance-runner.spec.ts`, the per-collector specs |
+| REQ-SEV-001…056 | `severity/rules.ts`, `severity/facts.ts`, `clock.ts` | `test/maintenance-severity.spec.ts`, `test/maintenance-build-finding.spec.ts` |
+| REQ-CFG-001…007 | `schema/config.ts`, `config/load-config.ts`, `providers/file-provider.ts` | `test/maintenance-config.spec.ts`, `test/maintenance-providers.spec.ts` |
+| REQ-NET-020…027 | `http/http-client.ts`, `http/offline-http-client.ts`, `exec/offline-command-runner.ts`, `sources/source-registry.ts`, `cli.ts` | `test/maintenance-http-client.spec.ts`, `test/maintenance-sources.spec.ts`, `test/maintenance-command-runner.spec.ts`, `test/maintenance-cli.spec.ts` |
+| REQ-ERR-030…038 | `errors.ts`, `collectors/collector.ts`, `sources/source-registry.ts` | `test/maintenance-errors.spec.ts`, `test/maintenance-runner.spec.ts`, the per-collector specs |
+| REQ-RPT-001…007 | `runner.ts`, `clock.ts`, `cli.ts` | `test/maintenance-runner.spec.ts`, `test/maintenance-clock.spec.ts`, `test/maintenance.e2e.spec.ts` |
 | REQ-CLI-001…007 | `cli.ts` | `test/maintenance-cli.spec.ts` |
-| REQ-NPM-010…020 | `collectors/npm.ts`, `parsers/npm-*.ts`, `exec/command-runner.ts` | `test/maintenance-collector-npm.spec.ts`, `test/maintenance-command-runner.spec.ts` |
-| REQ-GHA-010…019 | `collectors/github-actions.ts`, `parsers/workflow-yaml.ts` | `test/maintenance-collector-github-actions.spec.ts` |
+| REQ-NPM-010…020 | `collectors/npm.ts`, `parsers/package-json.ts`, `parsers/npm-output.ts`, `exec/command-runner.ts` | `test/maintenance-collector-npm.spec.ts`, `test/maintenance-command-runner.spec.ts`, `test/maintenance-parsers.spec.ts` |
+| REQ-GHA-010…019 | `collectors/github-actions.ts`, `parsers/workflow-yaml.ts` | `test/maintenance-collector-github-actions.spec.ts`, `test/maintenance-parsers.spec.ts` |
 | REQ-ARC-010…015 | `collectors/arc.ts`, `parsers/values-yaml.ts` | `test/maintenance-collector-arc.spec.ts`, `test/maintenance-parsers.spec.ts` |
-| REQ-EKS-010…041 | `collectors/eks.ts`, `parsers/values-yaml.ts` | `test/maintenance-collector-eks.spec.ts` |
-| REQ-IMG-010…022 | `collectors/images.ts`, `parsers/dockerfile.ts`, `parsers/tool-pins.ts` | `test/maintenance-collector-images.spec.ts` |
-| REQ-WFL-001…006 | `.github/workflows/maintenance-scan.yml` | Reviewed at step 12; REQ-WFL-005 verified by `test/maintenance.e2e.spec.ts` |
-| REQ-P2-001…008 | — | DEFERRED to pass 2 |
+| REQ-EKS-010…041 | `collectors/eks.ts`, `parsers/values-yaml.ts`, `collectors/build-finding.ts` | `test/maintenance-collector-eks.spec.ts` |
+| REQ-IMG-010…022 | `collectors/images.ts`, `parsers/dockerfile.ts`, `parsers/tool-pins.ts`, `collectors/arc.ts` | `test/maintenance-collector-images.spec.ts`, `test/maintenance-collector-arc.spec.ts`, `test/maintenance-parsers.spec.ts` |
+| REQ-WFL-001…006 | `.github/workflows/maintenance-scan.yml`, `summary.ts` | `test/maintenance-workflow.spec.ts` |
+| REQ-P2-001…009 | `schema/enriched-finding.ts` (contract only) | DEFERRED to pass 2 |

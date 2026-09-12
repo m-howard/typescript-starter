@@ -1,6 +1,6 @@
 # Runbook — maintenance scan
 
-**Status:** Draft — commands confirmed once the CLI ships
+**Status:** Current. Every command below was run against this repository
 **Related:** [pipeline-overview.md](./pipeline-overview.md) · [requirements.md](./requirements.md)
 
 ## Run a scan locally
@@ -9,8 +9,22 @@
 npm ci
 npm run maintenance:collect                      # all collectors, default config
 npm run maintenance:collect -- --collectors npm,images
-npm run maintenance:collect -- --offline         # no network; everything unresolved
+npm run maintenance:collect -- --offline         # no network; nothing resolved upstream
+npm run maintenance:collect -- --stdout          # report to stdout instead of a file
+npm run maintenance:collect -- --out build/report.json
+npm run maintenance:collect -- --fail-on high    # exit non-zero on a high or worse
+npm run maintenance:collect -- --help
 ```
+
+The report lands in `.maintenance/report.json`, which is gitignored. The command
+**exits zero however many findings it produces** — a non-zero exit means the tool
+broke. `--fail-on` is there for a caller who wants a gate anyway.
+
+Offline is not a degraded special case: it is the same `unresolved` mechanism at
+full scale. Both the HTTP client and the command runner refuse, so `npm outdated`
+and `npm audit` do not run either. The support calendars still answer, so an
+offline scan on this repository still reports the EKS and Debian end-of-life
+findings — those are the ones that need no network to be true.
 
 Set `GITHUB_TOKEN` first. Without it the GitHub API allows 60 requests per hour
 and a run will be throttled part-way through — the CLI warns at startup, and

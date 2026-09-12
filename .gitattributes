@@ -76,6 +76,11 @@
 # Text files where line endings should be preserved
 *.patch    -text
 
+# Captured tool output, compared byte for byte by the maintenance parser specs.
+# Without this they check out CRLF on the windows-latest CI leg and only there,
+# which breaks line arithmetic in the worst kind of flaky way.
+test/fixtures/**  text eol=lf
+
 #
 # Exclude files from exporting
 #

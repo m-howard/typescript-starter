@@ -11,7 +11,10 @@ const WORKFLOW_PATH = '.github/workflows/maintenance-scan.yml';
 interface WorkflowLike {
     on?: { schedule?: unknown; workflow_dispatch?: unknown };
     permissions?: Record<string, string>;
-    jobs?: Record<string, { steps?: Array<{ if?: string; uses?: string }> }>;
+    jobs?: Record<
+        string,
+        { steps?: Array<{ if?: string; uses?: string; run?: string; continueOnError?: string }> }
+    >;
 }
 
 /**
@@ -64,6 +67,17 @@ describe('the maintenance scan workflow', () => {
                 true,
             ]);
         }
+    });
+
+    it('should not gate the job on findings [REQ-WFL-006]', () => {
+        // --fail-on is what turns findings into a red job, and a scheduled job that goes
+        // red every week because maintenance work exists is a job people mute.
+        expect(text).not.toContain('--fail-on');
+        const collect = Object.values(workflow.jobs ?? {})
+            .flatMap((job) => job.steps ?? [])
+            .find((step) => step.run?.includes('maintenance:collect'));
+        expect(collect).toBeDefined();
+        expect(collect?.continueOnError).toBeUndefined();
     });
 
     it('should be in the set of workflows the collector scans [REQ-WFL-005]', async () => {

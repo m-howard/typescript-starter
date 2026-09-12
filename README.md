@@ -46,30 +46,61 @@ src/
 ├── main.ts            # Library exports
 ├── models/            # Data models and entities
 ├── services/          # Business logic and services
-└── utils/             # Utility functions and helpers
+├── utils/             # Utility functions and helpers
+└── maintenance/       # Runner-fleet maintenance scan (see below)
 
+infra/                 # Inventory of what is deployed - read by the scan
+schemas/               # Published JSON Schema, generated from src/maintenance
 test/                  # Comprehensive test suite
 scripts/               # Development and build scripts
 docs/                  # Documentation
+maintenance.config.yaml  # Everything the scan reads, declared explicitly
 ```
 
 ## 🛠️ Available Scripts
 
-| Script              | Description                      |
-| ------------------- | -------------------------------- |
-| `npm start`         | Run the application              |
-| `npm run start:dev` | Development mode with hot reload |
-| `npm run build`     | Build for production             |
-| `npm run test`      | Run all tests                    |
-| `npm run test:cov`  | Run tests with coverage          |
-| `npm run lint`      | Check code quality               |
-| `npm run format`    | Format code                      |
-| `npm run clean`     | Clean build artifacts            |
+| Script                        | Description                                  |
+| ----------------------------- | -------------------------------------------- |
+| `npm start`                   | Run the application                          |
+| `npm run start:dev`           | Development mode with hot reload             |
+| `npm run build`               | Build for production                         |
+| `npm run test`                | Run all tests                                |
+| `npm run test:cov`            | Run tests with coverage                      |
+| `npm run lint`                | Check code quality                           |
+| `npm run format`              | Format code                                  |
+| `npm run clean`               | Clean build artifacts                        |
+| `npm run maintenance:collect` | Scan for version drift and write a report    |
+| `npm run schema:check`        | Regenerate the JSON Schema and fail on drift |
 
 ## 📖 Documentation
 
 - [Complete Documentation](./docs/README.md) - Comprehensive project guide
 - [API Reference](./docs/API.md) - Detailed API documentation
+- [Maintenance automation](./docs/maintenance/README.md) - The runner-fleet scan
+
+## 🔍 Maintenance scan
+
+`src/maintenance/` keeps a GitHub Actions self-hosted runner fleet on ARC and
+EKS from drifting. It checks five surfaces — npm packages, action references,
+ARC charts, the EKS cluster and its addons, and container images with the tools
+baked into them — against what each publishes upstream, and writes a strict JSON
+report.
+
+The split is the design: deterministic tools establish **what is**, and every
+finding carries the file, line and command it came from. Judgement — what an
+upgrade breaks, how risky it is, what verifies it — belongs to a later
+agent-driven stage, and the schema makes that boundary a parse error rather than
+a convention.
+
+```bash
+npm run maintenance:collect            # writes .maintenance/report.json
+npm run maintenance:collect -- --offline   # no network; nothing resolved upstream
+```
+
+It exits zero however many findings it produces; a non-zero exit means the tool
+broke. Everything it reads is declared in `maintenance.config.yaml` — there is no
+globbing, so what gets scanned is visible in one reviewable file. A scheduled
+workflow runs it weekly and uploads the report.
 
 ## 🧪 Example Usage
 

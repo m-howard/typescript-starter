@@ -1,6 +1,6 @@
 # Pipeline overview
 
-**Status:** Draft — finalised once the collect stage ships
+**Status:** Current. The collect stage ships in `src/maintenance/`; the assess and publish stages are pass-2 work described in [pass-2-interface.md](./pass-2-interface.md)
 **Related:** [project-brief.md](./project-brief.md) · [schema-contract.md](./schema-contract.md) · [pass-2-interface.md](./pass-2-interface.md) · [runbook.md](./runbook.md)
 
 ## Stages

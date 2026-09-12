@@ -1,6 +1,6 @@
 # Schema contract
 
-**Status:** Draft — reconciled against the emitted JSON Schema at implementation step 13
+**Status:** Reconciled field-for-field against `schemas/maintenance-report.v1.json` and verified against it by `test/maintenance.e2e.spec.ts`, which validates a real report with Ajv in strict mode
 **Artifact:** `schemas/maintenance-report.v1.json` · **Source of truth:** `src/maintenance/schema/`
 **Related:** [pipeline-overview.md](./pipeline-overview.md) · [adr/0004](./adr/0004-zod-single-source-of-truth.md)
 
@@ -81,6 +81,11 @@ which version it emits; consumers pin.
 - **Nullable rather than optional** for absent values, so the shape is stable
   and consumers need not distinguish "missing" from "not applicable".
 - **Byte-stable output.** Regeneration produces an identical file; CI diffs it.
+- **Bounded free text.** `title` is capped at 160 characters, an evidence
+  `snippet` at 400 and a `stderrExcerpt` at 2,000. Collectors compose titles
+  from text they do not control — an advisory title runs to whatever length its
+  author chose — so they truncate before the contract rejects the whole finding.
+  The cap is exported as `FINDING_TITLE_MAX_LENGTH` rather than restated.
 - **No custom `x-` keywords.** Ajv's strict mode rejects unknown keywords, and a
   published contract should validate without consumers relaxing their validator.
   The schema version travels as `properties.schemaVersion.const`.

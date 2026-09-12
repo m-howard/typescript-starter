@@ -180,7 +180,7 @@ export async function collect(
  *
  * Worth saying out loud because both cases fail the same quiet way: a scan that
  * resolved nothing looks exactly like a scan that found nothing wrong, and only the
- * `unresolved` counts distinguish them (REQ-NET-022, REQ-NET-026).
+ * `unresolved` counts distinguish them (REQ-NET-022, REQ-NET-025).
  */
 export function degradedResolutionWarning(offline: boolean, tokenEnv: string): string | null {
     if (offline) {

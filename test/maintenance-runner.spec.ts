@@ -542,6 +542,21 @@ describe('runCollectors', () => {
         await expect(run([collector])).rejects.toThrow(InternalError);
     });
 
+    it('should keep going after a collector fails and still assemble a report [REQ-ERR-037]', async () => {
+        const report = await run([
+            stub('npm', () => Promise.reject(new NetworkError('registry unreachable'))),
+            stub('arc', (ctx) => Promise.resolve({ findings: [anyFinding(ctx)], errors: [] })),
+        ]);
+        expect(report.collectorRuns.map((r) => `${r.collector}=${r.status}`)).toEqual([
+            'npm=failed',
+            'arc=skipped',
+        ]);
+        // The failed collector still contributes its synthetic finding, so the surface it
+        // covers does not silently read as healthy.
+        expect(report.findings.map((f) => f.kind)).toEqual(['upstream-unresolved']);
+        expect(report.summary.worstStatus).toBe('failed');
+    });
+
     it('should refuse an invalid report rather than write one [REQ-RPT-007]', async () => {
         await expect(
             runCollectors({

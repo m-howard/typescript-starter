@@ -178,7 +178,7 @@ describe('degradedResolutionWarning', () => {
         expect(degradedResolutionWarning(true, 'MAINTENANCE_TEST_TOKEN')).toContain('Offline mode');
     });
 
-    it('should warn when no GitHub token is set [REQ-NET-026]', () => {
+    it('should warn when no GitHub token is set [REQ-NET-025]', () => {
         // 60 requests an hour, and the failure mode looks exactly like a clean scan.
         const warning = withToken(undefined, () =>
             degradedResolutionWarning(false, 'MAINTENANCE_TEST_TOKEN'),
@@ -196,6 +196,30 @@ describe('degradedResolutionWarning', () => {
         expect(
             withToken(undefined, () => degradedResolutionWarning(true, 'MAINTENANCE_TEST_TOKEN')),
         ).toContain('Offline mode');
+    });
+});
+
+describe('diagnostics [REQ-CLI-007]', () => {
+    it('should never write diagnostics to the console from anywhere in the stage', async () => {
+        // Winston already owns the output stream, and a stray console.log would land in
+        // the middle of a report written to standard output.
+        const root = path.resolve(__dirname, '..', 'src', 'maintenance');
+        const offenders: string[] = [];
+        const walk = async (dir: string): Promise<void> => {
+            for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+                const target = path.join(dir, entry.name);
+                if (entry.isDirectory()) {
+                    await walk(target);
+                } else if (entry.name.endsWith('.ts')) {
+                    const text = await fs.readFile(target, 'utf8');
+                    if (/\bconsole\.[a-z]+\(/.test(text)) {
+                        offenders.push(path.relative(root, target));
+                    }
+                }
+            }
+        };
+        await walk(root);
+        expect(offenders).toEqual([]);
     });
 });
 

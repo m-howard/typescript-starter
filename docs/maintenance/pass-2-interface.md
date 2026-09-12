@@ -1,6 +1,6 @@
 # Pass 2 interface — the assess and publish stages
 
-**Status:** Draft — this is the written target for work not yet built
+**Status:** Current, and still the written target for work not yet built. The `EnrichedFinding` contract exists and is tested; nothing produces one
 **Related:** [schema-contract.md](./schema-contract.md) · [requirements.md](./requirements.md) (REQ-P2-001 … REQ-P2-009) · [adr/0003](./adr/0003-two-hash-finding-identity.md) · [adr/0006](./adr/0006-deterministic-severity.md)
 
 Pass 1 builds none of this. It is specified now so the collect-stage contract

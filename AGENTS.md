@@ -41,6 +41,39 @@ examples/            # Usage examples
 scripts/             # Build and utility scripts
 ```
 
+### The maintenance subsystem
+
+`src/maintenance/` is a self-contained stage that scans the self-hosted runner
+fleet for version drift and emits a strict JSON report. It follows the rules
+above with two additions worth knowing before editing it:
+
+```
+src/maintenance/
+├── cli.ts  runner.ts  summary.ts  types.ts  errors.ts  clock.ts  version.ts
+├── schema/       Zod contract; the published JSON Schema is emitted from it
+├── collectors/   npm, github-actions, arc, eks, images, plus buildFinding
+├── sources/      resolve "what is the newest version?" per scheme
+├── parsers/      turn declared files into facts, with line numbers
+├── providers/ http/ exec/   the injectable I/O seams
+├── severity/ identity/ text/
+└── config/       load and validate maintenance.config.yaml
+```
+
+- **All I/O goes through a seam.** `FileProvider`, `HttpClient`,
+  `CommandRunner`, `Clock` and `VersionSourceRegistry` are injected through
+  `CollectorContext`. No unit test mocks `fs`, `fetch` or `child_process`, and
+  nothing in `src/maintenance/` reads the system clock directly.
+- **Zod is the single source of truth for the report.** Types come from
+  `z.infer`; `schemas/maintenance-report.v1.json` is generated and committed,
+  and CI fails on any drift. Never hand-edit the JSON.
+
+Requirements carry stable ids (`REQ-<AREA>-<nnn>`) in
+`docs/maintenance/requirements.md`, and the spec that verifies one names it in
+its test title, so the traceability table is checkable with grep. Cite the id
+when you implement or change the behaviour it describes.
+
+Start at [docs/maintenance/README.md](./docs/maintenance/README.md).
+
 ## Coding Standards & Best Practices
 
 ### TypeScript Guidelines
@@ -101,6 +134,10 @@ export default ServiceName;
 - `npm run test:e2e` - Run end-to-end tests
 - `npm run lint` - Run ESLint with auto-fix
 - `npm run format` - Format code with Prettier
+- `npm run maintenance:collect` - Run the maintenance scan (add `-- --help` for flags)
+- `npm run maintenance:summary` - Render a report as a markdown summary
+- `npm run schema:emit` - Regenerate the published JSON Schema
+- `npm run schema:check` - Regenerate it and fail on any diff
 
 ### Testing Strategy
 

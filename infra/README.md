@@ -24,8 +24,10 @@ these files must be kept true by hand.
 | `arc/gha-runner-scale-set.values.yaml` | Scale set chart version, runner image, scaling bounds |
 | `images/runner.Dockerfile` | Runner image base and the tools baked into it |
 
-The sample declarations land alongside the collectors that read them; until
-then this directory holds only this file.
+**The committed values are placeholders.** They describe a plausible fleet, not
+yours: cluster `1.31`, ARC charts `0.10.1`, runner image `2.321.0`. Replace them
+with real values before trusting a single finding — until you do, the scan is
+telling you the truth about a fleet that does not exist.
 
 ## Keeping them true
 

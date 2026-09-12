@@ -15,9 +15,12 @@ typescript-starter/
 │   │   └── user.ts        # User model example
 │   ├── services/          # Business logic services
 │   │   └── calculator.ts  # Calculator service example
-│   └── utils/             # Utility functions
-│       ├── helpers.ts     # General helper functions
-│       └── logger.ts      # Logging utility
+│   ├── utils/             # Utility functions
+│   │   ├── helpers.ts     # General helper functions
+│   │   └── logger.ts      # Logging utility
+│   └── maintenance/       # Runner-fleet maintenance scan
+├── infra/                 # Inventory of what is deployed, read by the scan
+├── schemas/               # Published JSON Schema (generated, committed)
 ├── test/                  # Test files
 ├── scripts/               # Build and development scripts
 ├── docs/                  # Documentation
@@ -32,6 +35,8 @@ typescript-starter/
 - **Models**: Example `User` class demonstrating TypeScript features
 - **Services**: `Calculator` service showing business logic implementation
 - **Utilities**: Helper functions and logging functionality
+- **Maintenance scan**: A deterministic version-drift scanner for a self-hosted
+  runner fleet, documented in [docs/maintenance/](./maintenance/README.md)
 
 ### Development Tools
 
@@ -108,6 +113,9 @@ npm run start:prod
 - `npm run test:e2e` - Run end-to-end tests
 - `npm run lint` - Run ESLint
 - `npm run format` - Format code with Prettier
+- `npm run maintenance:collect` - Run the maintenance scan
+- `npm run maintenance:summary` - Render a report as a markdown summary
+- `npm run schema:emit` / `npm run schema:check` - Regenerate the published JSON Schema
 
 ## Testing
 
