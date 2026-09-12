@@ -32,7 +32,10 @@
     "class-validator": "^0.14.1",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
-    "winston": "^3.17.0"
+    "semver": "^7.8.5",
+    "winston": "^3.17.0",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.2"
   },
   "devDependencies": {
     "@clerk/clerk-sdk-node": "^4.13.23",
@@ -45,6 +48,7 @@
     "@types/jest": "^29.5.14",
     "@types/lodash": "^4.17.18",
     "@types/node": "^22.10.7",
+    "@types/semver": "^7.8.0",
     "@types/supertest": "^6.0.2",
     "@types/uuid": "^10.0.0",
     "eslint": "^9.18.0",
@@ -79,7 +83,19 @@
       "src/**/*.(t|j)s"
     ],
     "coverageDirectory": "./coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "coverageThreshold": {
+      "./src/maintenance/": {
+        "branches": 80,
+        "functions": 85,
+        "lines": 85,
+        "statements": 85
+      }
+    },
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/test/fixtures/"
+    ]
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
