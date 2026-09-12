@@ -1,0 +1,24 @@
+# ARC controller, as deployed. Not a deployment manifest.
+#
+# Chart: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set-controller
+#
+# This must stay on the same version as gha-runner-scale-set.values.yaml. A controller
+# and a scale set on different chart versions is a supported-looking configuration that
+# fails in ways neither component reports, so the collector checks it (REQ-ARC-012).
+
+controller:
+    chartVersion: '0.10.1'
+    replicaCount: 1
+
+    image:
+        repository: ghcr.io/actions/gha-runner-scale-set-controller
+        tag: '0.10.1'
+
+    flags:
+        logLevel: info
+        logFormat: json
+        watchSingleNamespace: arc-runners
+
+serviceAccount:
+    create: true
+    name: gha-runner-scale-set-controller

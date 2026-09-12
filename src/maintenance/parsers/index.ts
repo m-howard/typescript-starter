@@ -5,3 +5,4 @@ export * from './npm-output';
 export * from './workflow-yaml';
 export * from './dockerfile';
 export * from './tool-pins';
+export * from './values-yaml';

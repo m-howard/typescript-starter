@@ -5,8 +5,10 @@
  * check are computed the same way whatever surface is being examined.
  */
 
+export * from './arc';
 export * from './build-finding';
 export * from './collector';
 export * from './github-actions';
 export * from './images';
+export * from './eks';
 export * from './npm';

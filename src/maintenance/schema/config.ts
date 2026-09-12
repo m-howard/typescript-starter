@@ -118,6 +118,7 @@ export const EksSupportCalendarEntrySchema = z.strictObject({
     endOfExtendedSupport: IsoDateSchema.nullable().default(null),
     status: z.enum(['standard-support', 'extended-support', 'deprecated']),
 });
+export type EksSupportCalendarEntry = z.infer<typeof EksSupportCalendarEntrySchema>;
 
 export const EksSupportCalendarSchema = z.strictObject({
     /** When a human last checked this table against the AWS documentation. */

@@ -1,0 +1,22 @@
+# A runner scale set, as deployed. Not a deployment manifest.
+#
+# Chart: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
+#
+# chartVersion must match the controller's — see the note in
+# gha-runner-scale-set-controller.values.yaml.
+
+scaleSet:
+    chartVersion: '0.10.1'
+    runnerScaleSetName: eks-runners
+    githubConfigUrl: https://github.com/m-howard
+    githubConfigSecret: gha-runner-scale-set-github-app
+
+    minRunners: 0
+    maxRunners: 20
+
+    runner:
+        # Compared against the tags published for ghcr.io/actions/actions-runner.
+        image: ghcr.io/actions/actions-runner:2.321.0
+        # The Dockerfile the fleet actually builds from is infra/images/runner.Dockerfile;
+        # this records which published image that build starts from.
+        containerMode: kubernetes

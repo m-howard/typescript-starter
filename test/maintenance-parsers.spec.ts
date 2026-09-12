@@ -16,6 +16,7 @@ import {
     splitImageReference,
     substitute,
     transitiveChainOf,
+    ValuesDocument,
 } from '../src/maintenance/parsers';
 import { ConfigError, ParseError } from '../src/maintenance/errors';
 
@@ -646,5 +647,124 @@ describe('findToolPins', () => {
         expect(() => findToolPins('x', [{ id: 'bad', pattern: '\\(HELM\\)=\\d+' }])).toThrow(
             ConfigError,
         );
+    });
+});
+
+describe('ValuesDocument', () => {
+    const VALUES = [
+        'controller:',
+        "    chartVersion: '0.10.1'",
+        '    replicaCount: 1',
+        '    image:',
+        '        repository: ghcr.io/actions/gha-runner-scale-set-controller',
+        "        tag: '0.10.1'",
+        'cluster:',
+        "    version: '1.31'",
+        '    addons:',
+        "        vpc-cni: 'v1.19.2-eksbuild.1'",
+        "        coredns: 'v1.11.4-eksbuild.2'",
+        'nodeGroups:',
+        '    - name: runners-default',
+        '      amiVersion: 1.31.0-20250101',
+        '',
+    ].join('\n');
+
+    const document = () => new ValuesDocument(VALUES, 'values.yaml');
+
+    describe('readString', () => {
+        it('should read a nested value with its line [REQ-ARC-013]', () => {
+            expect(document().readString('controller.chartVersion')).toEqual({
+                path: 'controller.chartVersion',
+                value: '0.10.1',
+                line: 2,
+                snippet: "chartVersion: '0.10.1'",
+            });
+        });
+
+        it('should read a value two levels down', () => {
+            expect(document().readString('controller.image.tag')?.line).toBe(6);
+        });
+
+        it('should address a list element by index', () => {
+            expect(document().readString('nodeGroups.0.name')?.value).toBe('runners-default');
+        });
+
+        it('should render a value YAML parsed as a number back to its text', () => {
+            // A collector compares and records what the file says, not what the parser
+            // decided the type was.
+            expect(document().readString('controller.replicaCount')?.value).toBe('1');
+        });
+
+        it.each([
+            ['an absent key', 'controller.missing'],
+            ['a path through a scalar', 'controller.chartVersion.deeper'],
+            ['a mapping rather than a scalar', 'controller.image'],
+            ['an out-of-range index', 'nodeGroups.7.name'],
+        ])('should return null for %s [REQ-ARC-015]', (_label: string, path: string) => {
+            expect(document().readString(path)).toBeNull();
+        });
+    });
+
+    describe('readMap', () => {
+        it('should read every entry of a mapping with its own line', () => {
+            expect(document().readMap('cluster.addons')).toEqual([
+                {
+                    path: 'cluster.addons.vpc-cni',
+                    value: 'v1.19.2-eksbuild.1',
+                    line: 10,
+                    snippet: "vpc-cni: 'v1.19.2-eksbuild.1'",
+                },
+                {
+                    path: 'cluster.addons.coredns',
+                    value: 'v1.11.4-eksbuild.2',
+                    line: 11,
+                    snippet: "coredns: 'v1.11.4-eksbuild.2'",
+                },
+            ]);
+        });
+
+        it('should return null when the path is not a mapping', () => {
+            expect(document().readMap('cluster.version')).toBeNull();
+        });
+
+        it('should skip an entry whose key is not a string', () => {
+            const numeric = new ValuesDocument(
+                ['addons:', "    1: 'v1'", "    coredns: 'v2'"].join('\n'),
+                'values.yaml',
+            );
+            expect(numeric.readMap('addons')?.map((entry) => entry.value)).toEqual(['v2']);
+        });
+
+        it('should skip an entry whose value is not a scalar', () => {
+            const nested = new ValuesDocument(
+                ['addons:', '    vpc-cni:', '        version: 1', "    coredns: 'v1'"].join('\n'),
+                'values.yaml',
+            );
+            expect(nested.readMap('addons')?.map((entry) => entry.value)).toEqual(['v1']);
+        });
+    });
+
+    describe('has', () => {
+        it('should report whether a path resolves at all', () => {
+            expect(document().has('cluster.addons')).toBe(true);
+            expect(document().has('cluster.missing')).toBe(false);
+        });
+    });
+
+    describe('construction', () => {
+        it('should reject a file that is not valid YAML naming it', () => {
+            expect(() => new ValuesDocument('\ttabs: are invalid', 'values.yaml')).toThrow(
+                ParseError,
+            );
+            expect(() => new ValuesDocument('\ttabs: are invalid', 'values.yaml')).toThrow(
+                /values\.yaml/,
+            );
+        });
+
+        it('should treat an explicitly null value as absent', () => {
+            // `version:` with nothing after it is a declaration that says nothing, which
+            // is not the same as a version the collector can compare.
+            expect(new ValuesDocument('version:', 'v.yaml').readString('version')).toBeNull();
+        });
     });
 });

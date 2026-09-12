@@ -26,7 +26,7 @@ sources:
 
 collectors:
     # A collector absent from this block is not configured, and the runner records it as
-    # skipped. arc, eks and images are added when infra/ declares real fleet state.
+    # skipped.
     npm:
         enabled: true
         # package.json is authoritative for the declared set: npm outdated reports only
@@ -51,7 +51,12 @@ collectors:
         # committed table rather than from a registry. Re-check it against the
         # distribution's published schedule and move lastVerified when you do.
         distroCalendar:
-            lastVerified: '2026-09-12'
+            # Placeholder. These dates were written from general knowledge, not read off
+            # each distribution's published schedule, so lastVerified records the last
+            # date somebody actually checked - which is nobody, yet. Until it moves, the
+            # collector reports this table as stale, which is the point: an unverified
+            # calendar producing critical findings should say so about itself.
+            lastVerified: '2026-01-01'
             staleAfterDays: 180
             codenames:
                 buster:
@@ -83,6 +88,29 @@ collectors:
                     release: '24.04'
                     endOfStandardSupport: '2029-06-01'
         dockerfiles:
+            - path: infra/images/runner.Dockerfile
+              baseImages:
+                  ghcr.io/actions/actions-runner:
+                      source: oci:ghcr.io/actions/actions-runner
+                      tagPattern: '^[0-9]+\.[0-9]+\.[0-9]+$'
+              toolPins:
+                  - id: nodejs
+                    pattern: 'deb\.nodesource\.com/setup_([0-9]+)\.x'
+                    source: github-release:nodejs/node
+                    compare: major
+                  - id: kubectl
+                    pattern: 'dl\.k8s\.io/release/v([0-9][^/]*)/bin'
+                    source: github-release:kubernetes/kubernetes
+                    compare: minor
+                  - id: helm
+                    pattern: 'get\.helm\.sh/helm-v([0-9][^-]*)-linux'
+                    source: github-release:helm/helm
+                    compare: exact
+                  - id: aws-cli
+                    pattern: 'awscli-exe-linux-x86_64-([0-9][^.]*\.[^.]*\.[^"]*)\.zip'
+                    source: github-release:aws/aws-cli
+                    compare: exact
+
             - path: .devcontainer/Dockerfile
               baseImages:
                   mcr.microsoft.com/devcontainers/base:
@@ -100,6 +128,77 @@ collectors:
                     pattern: 'deb\.nodesource\.com/setup_([0-9]+)\.x'
                     source: github-release:nodejs/node
                     compare: major
+
+    arc:
+        enabled: true
+        # ARC requires the controller and every scale set to be on the same chart
+        # version. A mismatch installs cleanly and fails later, so it is checked here.
+        requireChartVersionParity: true
+        chart:
+            valuesFile: infra/arc/gha-runner-scale-set-controller.values.yaml
+            versionPath: controller.chartVersion
+            source: helm:ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set-controller
+        runnerScaleSet:
+            valuesFile: infra/arc/gha-runner-scale-set.values.yaml
+            versionPath: scaleSet.chartVersion
+            source: helm:ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
+        runnerImage:
+            valuesFile: infra/arc/gha-runner-scale-set.values.yaml
+            imagePath: scaleSet.runner.image
+            source: oci:ghcr.io/actions/actions-runner
+            tagPattern: '^[0-9]+\.[0-9]+\.[0-9]+$'
+
+    eks:
+        enabled: true
+        inventoryFile: infra/eks/cluster.yaml
+        clusterVersionPath: cluster.version
+        addonsPath: cluster.addons
+        # support-calendar needs no credentials and works offline. aws-cli is opt-in
+        # enrichment that falls back to the calendar and records the downgrade in the
+        # finding's method and confidence.
+        # See docs/maintenance/adr/0002-eks-support-calendar.md
+        latestStrategy: support-calendar
+        # Empty on purpose. Upstream addon releases are not the same as the addon
+        # versions EKS offers, and reporting drift toward a version AWS does not publish
+        # is the mistake ADR-0002 rejects for the cluster version itself. Declare a
+        # source here only for an addon whose upstream you have checked tracks what EKS
+        # ships; until then the addons are inventoried but not compared.
+        addonLatest: {}
+        supportCalendar:
+            # Placeholder, exactly as with the distribution calendar above: these dates
+            # have not been checked against the AWS documentation, and lastVerified says
+            # so. Every EKS finding rests on this table, so the collector reports the
+            # table itself as stale until somebody verifies it and moves this date.
+            lastVerified: '2026-01-01'
+            staleAfterDays: 90
+            source: https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html
+            defaultVersion: '1.34'
+            versions:
+                - version: '1.31'
+                  releasedAt: '2024-09-26'
+                  endOfStandardSupport: '2025-11-26'
+                  endOfExtendedSupport: '2026-11-26'
+                  status: extended-support
+                - version: '1.32'
+                  releasedAt: '2025-01-23'
+                  endOfStandardSupport: '2026-03-23'
+                  endOfExtendedSupport: '2027-03-23'
+                  status: extended-support
+                - version: '1.33'
+                  releasedAt: '2025-05-28'
+                  endOfStandardSupport: '2026-07-31'
+                  endOfExtendedSupport: '2027-07-31'
+                  status: extended-support
+                - version: '1.34'
+                  releasedAt: '2025-09-26'
+                  endOfStandardSupport: '2026-11-26'
+                  endOfExtendedSupport: '2027-11-26'
+                  status: standard-support
+                - version: '1.35'
+                  releasedAt: '2026-01-22'
+                  endOfStandardSupport: '2027-03-23'
+                  endOfExtendedSupport: '2028-03-23'
+                  status: standard-support
 
 severity:
     # Every override needs a reason and an expiry. An expired override is ignored and

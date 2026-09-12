@@ -273,8 +273,8 @@ and `test/`.
 | REQ-CLI-001…007 | `cli.ts` | `test/maintenance-cli.spec.ts` |
 | REQ-NPM-010…020 | `collectors/npm.ts`, `parsers/npm-*.ts`, `exec/command-runner.ts` | `test/maintenance-collector-npm.spec.ts`, `test/maintenance-command-runner.spec.ts` |
 | REQ-GHA-010…019 | `collectors/github-actions.ts`, `parsers/workflow-yaml.ts` | `test/maintenance-collector-github-actions.spec.ts` |
-| REQ-ARC-010…015 | `collectors/arc.ts` | `test/maintenance-collector-arc.spec.ts` |
-| REQ-EKS-010…041 | `collectors/eks.ts`, `sources/eks-source.ts` | `test/maintenance-collector-eks.spec.ts` |
+| REQ-ARC-010…015 | `collectors/arc.ts`, `parsers/values-yaml.ts` | `test/maintenance-collector-arc.spec.ts`, `test/maintenance-parsers.spec.ts` |
+| REQ-EKS-010…041 | `collectors/eks.ts`, `parsers/values-yaml.ts` | `test/maintenance-collector-eks.spec.ts` |
 | REQ-IMG-010…022 | `collectors/images.ts`, `parsers/dockerfile.ts`, `parsers/tool-pins.ts` | `test/maintenance-collector-images.spec.ts` |
 | REQ-WFL-001…006 | `.github/workflows/maintenance-scan.yml` | Reviewed at step 12; REQ-WFL-005 verified by `test/maintenance.e2e.spec.ts` |
 | REQ-P2-001…008 | — | DEFERRED to pass 2 |

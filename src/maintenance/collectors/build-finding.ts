@@ -31,6 +31,7 @@ import { computeSeverity } from '../severity/rules';
 import {
     ParsedVersion,
     VersionPrecision,
+    coerceVersionCore,
     compareVersions,
     parseVersionForComparison,
     truncateVersion,
@@ -67,6 +68,15 @@ export interface BuildFindingInput {
      * `majorsBehind` are computed against the narrowed value.
      */
     comparePrecision?: VersionPrecision;
+    /**
+     * Compare on the semantic version core, discarding any prerelease component.
+     *
+     * For the domains where a suffix is a build identifier rather than a prerelease. An
+     * EKS addon's `-eksbuild.N` decorates the version it follows, but semver reads it as
+     * coming *before* it, so `v1.19.2-eksbuild.1` would otherwise be reported as a patch
+     * behind plain `1.19.2` — its own version (REQ-EKS-015).
+     */
+    compareOnCore?: boolean;
     /** The outcome of asking "what is newest?", including the case where nothing was asked. */
     latest: LatestResolution;
     evidence: Evidence[];
@@ -190,7 +200,9 @@ function comparableLatest(input: BuildFindingInput): ParsedVersion | null {
     if (input.latest.version === null) {
         return null;
     }
-    const parsed = parseVersionForComparison(input.latest.version);
+    const parsed = input.compareOnCore
+        ? coerceVersionCore(input.latest.version)
+        : parseVersionForComparison(input.latest.version);
     if (parsed === null || input.comparePrecision === undefined) {
         return parsed;
     }

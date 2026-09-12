@@ -1,0 +1,37 @@
+# What is currently deployed, not what to deploy.
+#
+# Nothing here is applied to a cluster. Update it in the same change that performs a
+# fleet upgrade; a stale declaration hides real drift behind a version nobody runs.
+#
+# Quote every version. YAML parses an unquoted 1.30 as the number 1.3 and loses the
+# trailing zero, and 1.3 is not an EKS version.
+
+cluster:
+    name: gha-runners
+    region: eu-west-2
+    # The control-plane version. Compared against the support calendar in
+    # maintenance.config.yaml, never against upstream Kubernetes releases: EKS trails
+    # upstream by months, so upstream would report drift toward versions EKS does not
+    # offer (ADR-0002, REQ-EKS-016).
+    version: '1.31'
+
+    # Managed addon versions exactly as `aws eks describe-addon-versions` reports them.
+    # The -eksbuild suffix is part of the version and is recorded in full; comparison
+    # happens on the semantic version core (REQ-EKS-015).
+    addons:
+        vpc-cni: 'v1.19.2-eksbuild.1'
+        coredns: 'v1.11.4-eksbuild.2'
+        kube-proxy: 'v1.31.3-eksbuild.2'
+        aws-ebs-csi-driver: 'v1.38.1-eksbuild.1'
+
+    nodeGroups:
+        - name: runners-default
+          amiType: AL2023_x86_64_STANDARD
+          instanceTypes:
+              - m7i.xlarge
+          minSize: 0
+          maxSize: 20
+
+# When a human last checked this file against the live cluster. The collectors cannot
+# detect drift between this file and reality — only between this file and upstream.
+lastReconciled: '2026-09-12'
