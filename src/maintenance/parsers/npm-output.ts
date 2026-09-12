@@ -115,16 +115,30 @@ export function parseNpmAudit(stdout: string): NpmAuditReport {
 }
 
 /**
- * The advisories affecting a package.
+ * The distinct advisories affecting a package.
  *
  * Filters `via[]` down to object entries, discarding the transitive-chain strings. An
  * advisory with no identifiable id is discarded too: a finding keyed on `undefined`
  * would collide with every other one.
+ *
+ * Deduplicated by identifier, because npm lists an advisory once per affected path
+ * rather than once per advisory — `minimatch` in this repository's own audit reports
+ * GHSA-3ppc-4f35-3m26 three times. Emitting a finding per entry would put three findings
+ * carrying the same fingerprint into one report, which the publish stage cannot tell
+ * apart (REQ-NPM-015).
  */
 export function advisoriesOf(vulnerability: NpmVulnerability): NpmAdvisory[] {
-    return vulnerability.via.filter(
-        (entry): entry is NpmAdvisory => typeof entry !== 'string' && advisoryId(entry) !== null,
-    );
+    const byId = new Map<string, NpmAdvisory>();
+    for (const entry of vulnerability.via) {
+        if (typeof entry === 'string') {
+            continue;
+        }
+        const id = advisoryId(entry);
+        if (id !== null && !byId.has(id)) {
+            byId.set(id, entry);
+        }
+    }
+    return [...byId.values()];
 }
 
 /**

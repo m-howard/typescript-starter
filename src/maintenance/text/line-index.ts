@@ -7,6 +7,8 @@
  * and manifest parsing needs the reverse lookup from a matched string.
  */
 
+import { truncate } from './truncate';
+
 /** A one-based position within a text document, as editors and reviewers count. */
 export interface LineCol {
     line: number;
@@ -82,8 +84,7 @@ export class LineIndex {
      * @param maxLength Maximum length of the returned snippet, ellipsised when exceeded.
      */
     public snippetAt(line: number, maxLength = 200): string {
-        const content = this.lineAt(line).trim();
-        return content.length <= maxLength ? content : `${content.slice(0, maxLength - 1)}…`;
+        return truncate(this.lineAt(line).trim(), maxLength);
     }
 
     /** Index into {@link lineStarts} of the line containing `offset`. */

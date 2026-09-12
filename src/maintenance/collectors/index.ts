@@ -9,3 +9,4 @@ export * from './build-finding';
 export * from './collector';
 export * from './github-actions';
 export * from './images';
+export * from './npm';

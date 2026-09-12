@@ -30,6 +30,15 @@ export const FINGERPRINT_VERSION = 'fp1';
 /** Severity rule-table version, recorded on every finding for auditability. */
 export const SEVERITY_RULES_VERSION = 'sev1';
 
+/**
+ * Longest a finding title may be.
+ *
+ * Exported because collectors compose titles from text they do not control — an advisory
+ * title runs to whatever length its author chose — and must bound them before the
+ * contract does it for them by rejecting the whole finding.
+ */
+export const FINDING_TITLE_MAX_LENGTH = 160;
+
 export const SubjectKindSchema = z
     .enum([
         'npm-package',
@@ -213,7 +222,7 @@ export const FindingSchema = z
         collector: CollectorIdSchema,
         kind: FindingKindSchema,
         subject: SubjectSchema,
-        title: z.string().min(1).max(160),
+        title: z.string().min(1).max(FINDING_TITLE_MAX_LENGTH),
         detail: z.string().min(1),
         versions: VersionsSchema,
         latestResolution: LatestResolutionSchema,

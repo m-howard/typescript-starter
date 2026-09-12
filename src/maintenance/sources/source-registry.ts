@@ -112,5 +112,8 @@ function cacheKey(ref: VersionRef, options: Omit<ResolveRequest, 'ref'>): string
         ref.raw,
         options.tagPattern?.source ?? '',
         options.includePrereleases === true ? 'pre' : '',
+        // Two collectors asking about different observed versions are asking different
+        // questions, even though the latest version they get back is the same.
+        options.observedVersion ?? '',
     ].join('|');
 }

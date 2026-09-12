@@ -22,6 +22,7 @@ import {
 import { HttpClient, HttpRequest, HttpResponse } from '../../src/maintenance/http/http-client';
 import {
     ProvenanceMethod,
+    ResolveRequest,
     ResolvedVersion,
     VersionSourceRegistry,
 } from '../../src/maintenance/sources';
@@ -164,6 +165,9 @@ export class FakeCommandRunner implements CommandRunner {
     }
 }
 
+/** Everything a caller may pass to `VersionSourceRegistry.resolve` besides the ref. */
+type ResolveOptions = Omit<ResolveRequest, 'ref'>;
+
 /** A logger that records instead of writing, so a spec can assert what was reported. */
 export class RecordingLogger extends Logger {
     public readonly lines: Array<{ level: string; message: string }> = [];
@@ -200,6 +204,9 @@ export class FakeSourceRegistry extends VersionSourceRegistry {
     /** References resolved during the test, in order. */
     public readonly asked: string[] = [];
 
+    /** The full request behind each entry of {@link asked}, for asserting on options. */
+    public readonly requests: Array<{ ref: string; options: ResolveOptions }> = [];
+
     private readonly answers = new Map<string, ResolvedVersion | Error>();
 
     constructor(answers: Record<string, ResolvedVersion | Error> = {}) {
@@ -214,8 +221,9 @@ export class FakeSourceRegistry extends VersionSourceRegistry {
         return this;
     }
 
-    public resolve(rawRef: string): Promise<ResolvedVersion> {
+    public resolve(rawRef: string, options: ResolveOptions = {}): Promise<ResolvedVersion> {
         this.asked.push(rawRef);
+        this.requests.push({ ref: rawRef, options });
         const answer = this.answers.get(rawRef);
         if (answer === undefined) {
             return Promise.reject(
@@ -234,6 +242,7 @@ export function fakeResolved(
     version: string,
     method: ProvenanceMethod = 'github-release',
     confidence: Confidence = 'high',
+    deprecated: boolean | null = null,
 ): ResolvedVersion {
     return {
         status: 'resolved',
@@ -242,6 +251,7 @@ export function fakeResolved(
         method,
         confidence,
         reason: null,
+        deprecated,
         evidence: [],
     };
 }
@@ -258,6 +268,7 @@ export function fakeUnresolved(
         method,
         confidence: 'low',
         reason,
+        deprecated: null,
         evidence: [],
     };
 }

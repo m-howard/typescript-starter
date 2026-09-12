@@ -111,38 +111,54 @@ describe('NpmRegistrySource', () => {
         },
     );
 
-    describe('isDeprecated', () => {
-        it('should report a deprecated version', async () => {
-            const http = new FakeHttpClient({
-                [NPM_URL]: {
-                    body: JSON.stringify({ versions: { '5.0.0': { deprecated: 'use 5.9' } } }),
-                },
-            });
-
-            await expect(
-                new NpmRegistrySource(http).isDeprecated('typescript', '5.0.0'),
-            ).resolves.toBe(true);
+    describe('deprecation [REQ-NPM-017]', () => {
+        const packument = JSON.stringify({
+            'dist-tags': { latest: '5.9.2' },
+            versions: { '5.0.0': { deprecated: 'use 5.9' }, '5.9.2': {} },
         });
 
-        it('should report a live version as not deprecated', async () => {
-            const http = new FakeHttpClient({
-                [NPM_URL]: { body: JSON.stringify({ versions: { '5.9.2': {} } }) },
+        it('should report the observed version as deprecated', async () => {
+            const http = new FakeHttpClient({ [NPM_URL]: { body: packument } });
+
+            const result = await new NpmRegistrySource(http).resolve({
+                ref: ref('npm:typescript'),
+                observedVersion: '5.0.0',
             });
 
-            await expect(
-                new NpmRegistrySource(http).isDeprecated('typescript', '5.9.2'),
-            ).resolves.toBe(false);
+            expect(result).toMatchObject({ version: '5.9.2', deprecated: true });
         });
 
-        it.each([
-            ['the registry errors', { status: 500, ok: false, body: '' }],
-            ['the response is unparseable', { body: 'not json' }],
-        ])('should return null when %s, rather than guessing', async (_label, entry) => {
-            const http = new FakeHttpClient({ [NPM_URL]: entry });
+        it('should report a live observed version as not deprecated', async () => {
+            const http = new FakeHttpClient({ [NPM_URL]: { body: packument } });
 
-            await expect(
-                new NpmRegistrySource(http).isDeprecated('typescript', '5.9.2'),
-            ).resolves.toBeNull();
+            const result = await new NpmRegistrySource(http).resolve({
+                ref: ref('npm:typescript'),
+                observedVersion: '5.9.2',
+            });
+
+            expect(result.deprecated).toBe(false);
+        });
+
+        it('should leave deprecation null when no observed version was given', async () => {
+            const http = new FakeHttpClient({ [NPM_URL]: { body: packument } });
+
+            const result = await new NpmRegistrySource(http).resolve({
+                ref: ref('npm:typescript'),
+            });
+
+            expect(result.deprecated).toBeNull();
+        });
+
+        it('should leave deprecation null for a version the registry does not list', async () => {
+            const http = new FakeHttpClient({ [NPM_URL]: { body: packument } });
+
+            const result = await new NpmRegistrySource(http).resolve({
+                ref: ref('npm:typescript'),
+                observedVersion: '4.0.0',
+            });
+
+            // "Not listed" is not the same as "fine", and only one of those is true.
+            expect(result.deprecated).toBeNull();
         });
     });
 });

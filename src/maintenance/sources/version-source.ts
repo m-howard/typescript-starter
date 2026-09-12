@@ -64,6 +64,14 @@ export interface ResolveRequest {
     tagPattern?: RegExp;
     /** Include prereleases in selection. Off by default. */
     includePrereleases?: boolean;
+    /**
+     * The version the collector observed, when it wants to know more about that one
+     * specifically — today, whether upstream has deprecated it.
+     *
+     * Asked here rather than through a second method so the answer comes from the same
+     * fetch, and so a collector holding only the registry can still get it.
+     */
+    observedVersion?: string;
 }
 
 /**
@@ -82,6 +90,14 @@ export interface ResolvedVersion {
     confidence: Confidence;
     /** Why, when unresolved. Always populated in that case. */
     reason: string | null;
+    /**
+     * Whether upstream marks the observed version deprecated.
+     *
+     * Null when not asked or not knowable. A deprecated dependency is maintenance work
+     * even when it is on its latest version, so this is a fact in its own right rather
+     * than a version comparison (REQ-NPM-017).
+     */
+    deprecated: boolean | null;
     /** Whatever was observed while resolving: the URL fetched, the command run. */
     evidence: Evidence[];
 }
@@ -104,6 +120,7 @@ export function unresolved(
         method,
         confidence: 'low',
         reason,
+        deprecated: null,
         evidence,
     };
 }
@@ -116,5 +133,14 @@ export function resolved(
     confidence: Confidence,
     evidence: Evidence[] = [],
 ): ResolvedVersion {
-    return { status: 'resolved', version, raw, method, confidence, reason: null, evidence };
+    return {
+        status: 'resolved',
+        version,
+        raw,
+        method,
+        confidence,
+        reason: null,
+        deprecated: null,
+        evidence,
+    };
 }

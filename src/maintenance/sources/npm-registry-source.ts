@@ -1,8 +1,10 @@
 /**
  * Latest version of an npm package, from the registry.
  *
- * Also reports deprecation, which the npm collector turns into its own finding kind —
- * a deprecated package is maintenance work even when it is on its latest version.
+ * Also reports whether the observed version is deprecated, which the npm collector
+ * turns into its own finding kind — a deprecated package is maintenance work even when
+ * it is on its latest version. It comes from the same packument as the latest version,
+ * so asking costs no extra request.
  */
 
 import { HttpClient } from '../http/http-client';
@@ -57,30 +59,29 @@ export class NpmRegistrySource implements VersionSource {
                 evidence,
             );
         }
-        return resolved(latest, latest, 'npm-registry', 'high', evidence);
-    }
-
-    /**
-     * Whether the registry marks a version deprecated.
-     *
-     * Separate from resolution because it answers a different question and the npm
-     * collector needs both from one fetch — the HTTP client memoises the response.
-     */
-    public async isDeprecated(packageName: string, version: string): Promise<boolean | null> {
-        const response = await this.http.request({ url: this.packumentUrl(packageName) });
-        if (!response.ok) {
-            return null;
-        }
-        try {
-            const document = JSON.parse(response.body) as PackumentLike;
-            return document.versions?.[version]?.deprecated !== undefined;
-        } catch {
-            return null;
-        }
+        return {
+            ...resolved(latest, latest, 'npm-registry', 'high', evidence),
+            deprecated: readDeprecated(document, request.observedVersion),
+        };
     }
 
     /** Scoped names contain a slash, which must be encoded for the registry path. */
     private packumentUrl(packageName: string): string {
         return `${this.registryUrl.replace(/\/$/, '')}/${packageName.replace('/', '%2f')}`;
     }
+}
+
+/**
+ * Whether the packument marks the observed version deprecated.
+ *
+ * Null rather than false when the version is absent from the document: "the registry
+ * does not list this version" is not the same as "this version is fine", and only the
+ * first is honest about what was learned.
+ */
+function readDeprecated(document: PackumentLike, observedVersion?: string): boolean | null {
+    if (observedVersion === undefined) {
+        return null;
+    }
+    const entry = document.versions?.[observedVersion];
+    return entry === undefined ? null : entry.deprecated !== undefined;
 }
