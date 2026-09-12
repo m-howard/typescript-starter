@@ -42,6 +42,9 @@ collectors:
         enabled: true
         workflows:
             - .github/workflows/ci.yml
+            # The scan reads its own workflow, so that file has to pass the policy it
+            # enforces (REQ-WFL-005).
+            - .github/workflows/maintenance-scan.yml
         requireShaPins: true
         ignore: []
 

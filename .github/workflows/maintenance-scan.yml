@@ -1,0 +1,85 @@
+# Deterministic maintenance scan for the self-hosted runner fleet.
+#
+# Collect only: this workflow produces a report and nothing else. Issue creation belongs
+# to the pass-2 assess stage, which is why the permissions below stop at reading
+# contents. See docs/maintenance/pipeline-overview.md.
+#
+# A red run means the *tool* broke. Findings never fail the job — a scheduled job that
+# goes red every week because maintenance work exists is a job people mute, and this one
+# is only worth having if somebody still reads the report (REQ-WFL-006).
+#
+# Every action below is pinned to a full commit SHA with the version in a trailing
+# comment. That is not decoration: this file is in the set of workflows the scan reads,
+# so it has to pass the policy it enforces, and pinning here exercises the SHA path on
+# every run (REQ-WFL-004, REQ-WFL-005).
+
+name: Maintenance scan
+
+on:
+  schedule:
+    # Mondays at 06:00 UTC — early enough that a triager sees it at the start of the week.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      collectors:
+        description: 'Comma-separated subset to run (default: all configured)'
+        required: false
+        type: string
+      offline:
+        description: 'Make no network request; every lookup reports unresolved'
+        required: false
+        type: boolean
+        default: false
+
+# Read-only. Pass 1 writes nothing back to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: maintenance-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  collect:
+    name: Collect
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run the collectors
+        env:
+          # Raises the GitHub API allowance from 60 requests an hour to 1,000. Without it
+          # most upstream lookups fail and the report is honest but nearly empty of
+          # resolved versions.
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          npm run maintenance:collect -- \
+            --out .maintenance/report.json \
+            ${{ inputs.collectors && format('--collectors {0}', inputs.collectors) || '' }} \
+            ${{ inputs.offline && '--offline' || '' }}
+
+      - name: Summarise
+        if: always()
+        run: npm run --silent maintenance:summary -- .maintenance/report.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the report
+        # Always, so a degraded or failed run still leaves something to debug with
+        # (REQ-WFL-003).
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: maintenance-report
+          path: .maintenance/report.json
+          if-no-files-found: warn
+          retention-days: 30

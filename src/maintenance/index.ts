@@ -11,6 +11,7 @@ export * from './errors';
 export * from './clock';
 export * from './version';
 export * from './runner';
+export * from './summary';
 export * from './collectors';
 export * from './config/load-config';
 export * from './providers/file-provider';
