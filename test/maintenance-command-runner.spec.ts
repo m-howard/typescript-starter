@@ -2,7 +2,8 @@ import { promises as fs } from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { DEFAULT_MAX_BUFFER, ExecFileCommandRunner } from '../src/maintenance/exec/command-runner';
-import { CommandFailedError, TimeoutError } from '../src/maintenance/errors';
+import { OfflineCommandRunner } from '../src/maintenance/exec/offline-command-runner';
+import { CommandFailedError, OfflineError, TimeoutError } from '../src/maintenance/errors';
 import { SystemClock } from '../src/maintenance/clock';
 import { FakeCommandRunner } from './support/maintenance-fakes';
 
@@ -198,5 +199,25 @@ describe('FakeCommandRunner', () => {
 
         expect(fake.calls).toHaveLength(1);
         expect(fake.calls[0].argv).toEqual(['npm', 'ls']);
+    });
+});
+
+describe('OfflineCommandRunner [REQ-NET-020]', () => {
+    it('should refuse every command, naming it', async () => {
+        // Every command this stage runs reaches the network, so offline has to stop them
+        // as surely as it stops HTTP requests.
+        await expect(
+            new OfflineCommandRunner().run({ argv: ['npm', 'audit', '--json'], cwd: '/repo' }),
+        ).rejects.toThrow(OfflineError);
+        await expect(
+            new OfflineCommandRunner().run({ argv: ['npm', 'audit', '--json'], cwd: '/repo' }),
+        ).rejects.toThrow(/npm audit --json/);
+    });
+
+    it('should classify the refusal as not worth retrying', async () => {
+        const error = await new OfflineCommandRunner()
+            .run({ argv: ['aws', 'eks', 'describe-cluster-versions'], cwd: '/repo' })
+            .catch((caught: unknown) => caught as OfflineError);
+        expect(error).toMatchObject({ code: 'offline', retryable: false });
     });
 });

@@ -187,3 +187,24 @@ describe('toMaintenanceError', () => {
         expect(toMaintenanceError('a bare string').code).toBe('internal');
     });
 });
+
+describe('toError across realms', () => {
+    it('should keep the message of an error that fails instanceof', () => {
+        // Node internals, workers and vm contexts all produce errors whose `instanceof
+        // Error` is false in the calling realm. Rendering them as JSON loses the only
+        // sentence worth reading, because `message` is not an own property.
+        const foreign = { name: 'TypeError', message: "Unknown option '--offlien'" };
+        const converted = toError(foreign);
+        expect(converted).toBeInstanceOf(Error);
+        expect(converted.message).toBe("Unknown option '--offlien'");
+        expect(converted.name).toBe('TypeError');
+    });
+
+    it('should default the name when only a message is present', () => {
+        expect(toError({ message: 'something went wrong' }).name).toBe('Error');
+    });
+
+    it('should still render an object carrying no message', () => {
+        expect(toError({ code: 'ENOENT' }).message).toBe('{"code":"ENOENT"}');
+    });
+});

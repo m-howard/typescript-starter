@@ -120,3 +120,7 @@ MANIFEST
 .temp
 tmp
 temp
+
+# Maintenance scan output. The report is a build artifact, not a tracked file - CI's
+# `git diff --exit-code` step would otherwise fail on the next unrelated pull request.
+.maintenance/

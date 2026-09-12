@@ -30,7 +30,7 @@ import { Confidence } from '../../src/maintenance/schema';
 import { MaintenanceConfigSchema } from '../../src/maintenance/schema/config';
 import { CollectorContext } from '../../src/maintenance/types';
 import { FixedClock } from '../../src/maintenance/clock';
-import { Logger } from '../../src/utils/logger';
+import { Logger, LogLevel } from '../../src/utils/logger';
 
 /** A file provider backed by an in-memory map. */
 export class InMemoryFileProvider implements FileProvider {
@@ -168,29 +168,51 @@ export class FakeCommandRunner implements CommandRunner {
 /** Everything a caller may pass to `VersionSourceRegistry.resolve` besides the ref. */
 type ResolveOptions = Omit<ResolveRequest, 'ref'>;
 
-/** A logger that records instead of writing, so a spec can assert what was reported. */
+/** Severities in increasing order, matching winston's own ordering. */
+const LEVEL_ORDER: LogLevel[] = [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR];
+
+/**
+ * A logger that records instead of writing, so a spec can assert what was reported.
+ *
+ * It honours {@link setLogLevel} rather than recording everything. That fidelity is
+ * load-bearing for one guarantee in particular: the CLI drops to error-only when it
+ * writes a report to standard output, and a fake that recorded anyway would let a
+ * regression through while the assertion still passed (REQ-CLI-005).
+ */
 export class RecordingLogger extends Logger {
-    public readonly lines: Array<{ level: string; message: string }> = [];
+    public readonly lines: Array<{ level: LogLevel; message: string }> = [];
+
+    private threshold: LogLevel = LogLevel.DEBUG;
+
+    public setLogLevel(level: LogLevel): void {
+        this.threshold = level;
+    }
 
     public debug(message: string): void {
-        this.lines.push({ level: 'debug', message });
+        this.record(LogLevel.DEBUG, message);
     }
 
     public info(message: string): void {
-        this.lines.push({ level: 'info', message });
+        this.record(LogLevel.INFO, message);
     }
 
     public warn(message: string): void {
-        this.lines.push({ level: 'warn', message });
+        this.record(LogLevel.WARN, message);
     }
 
     public error(message: string): void {
-        this.lines.push({ level: 'error', message });
+        this.record(LogLevel.ERROR, message);
     }
 
     /** Every message logged at a level, for a single readable assertion. */
-    public at(level: string): string[] {
+    public at(level: LogLevel | string): string[] {
         return this.lines.filter((line) => line.level === level).map((line) => line.message);
+    }
+
+    private record(level: LogLevel, message: string): void {
+        if (LEVEL_ORDER.indexOf(level) >= LEVEL_ORDER.indexOf(this.threshold)) {
+            this.lines.push({ level, message });
+        }
     }
 }
 

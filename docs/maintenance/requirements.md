@@ -120,8 +120,9 @@ fact. *Source* — an upstream service consulted for a latest version.
 | **REQ-ERR-031** | Unwanted | If a collector throws, then the runner shall record its status as `failed` and emit one synthetic Finding recording the failure. |
 | **REQ-ERR-032** | Unwanted | If an upstream response indicates rate limiting, then the error shall be classified as `rate-limited` and marked retryable. |
 | **REQ-ERR-033** | Event-driven | When a collector produces both Findings and errors, the runner shall record its status as `partial`. |
+| **REQ-ERR-038** | Event-driven | When a collector produces Findings of which any is unresolved, the runner shall record its status as `partial` even if no error was recorded. |
 | **REQ-ERR-034** | Event-driven | When a collector produces errors and no Findings, the runner shall record its status as `failed`. |
-| **REQ-ERR-035** | Event-driven | When a collector produces no errors, the runner shall record its status as `ok`. |
+| **REQ-ERR-035** | Event-driven | When a collector produces neither errors nor unresolved Findings, the runner shall record its status as `ok`. |
 | **REQ-ERR-036** | Ubiquitous | Every recorded error shall carry a machine-readable code, a message, and a retryable flag. |
 | **REQ-ERR-037** | Ubiquitous | A collector failure shall not prevent other collectors from running or the report from being written. |
 

@@ -94,12 +94,20 @@ export async function runCollector(
 /**
  * Status for a collector that returned normally.
  *
- * Errors alongside findings is `partial`: the collector did useful work but its picture
- * is incomplete. Errors with nothing to show is `failed` — there is no evidence the
- * surface was examined at all.
+ * A run is degraded when it recorded an error **or** when any finding is unresolved.
+ * The second half matters more than it looks: in offline mode, and on a token-less run
+ * against a rate-limited GitHub, every lookup fails without a single collector-level
+ * error. Reporting `ok` there would put "worst run ok" at the top of a report that
+ * established nothing, which is the exact failure mode this design exists to avoid
+ * (REQ-ERR-033, REQ-ERR-035, REQ-NET-022).
+ *
+ * Degraded with findings is `partial` — useful work, incomplete picture. Degraded with
+ * nothing to show is `failed`: there is no evidence the surface was examined at all.
  */
 export function deriveStatus(output: CollectorOutput): CollectorStatus {
-    if (output.errors.length === 0) {
+    const degraded =
+        output.errors.length > 0 || output.findings.some((finding) => finding.unresolved);
+    if (!degraded) {
         return 'ok';
     }
     return output.findings.length > 0 ? 'partial' : 'failed';

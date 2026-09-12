@@ -192,7 +192,30 @@ export function toError(value: unknown): Error {
     if (typeof value === 'string') {
         return new Error(value);
     }
+    if (isErrorLike(value)) {
+        const error = new Error(value.message);
+        error.name = typeof value.name === 'string' ? value.name : 'Error';
+        return error;
+    }
     return new Error(safeStringify(value));
+}
+
+/**
+ * Something that carries an error message without passing `instanceof Error`.
+ *
+ * `instanceof` compares against the current realm's `Error`, so an error thrown by a
+ * Node internal, a worker or a `vm` context fails the check even though it is one. The
+ * consequence is not cosmetic: `util.parseArgs` rejects an unknown flag with the
+ * message `Unknown option '--offlien'` and an own-property set of just `{ code }`, so
+ * falling through to JSON rendering replaces the one useful sentence with
+ * `{"code":"ERR_PARSE_ARGS_UNKNOWN_OPTION"}` — and REQ-CLI-004 requires naming the flag.
+ */
+function isErrorLike(value: unknown): value is { message: string; name?: unknown } {
+    return (
+        typeof value === 'object' &&
+        value !== null &&
+        typeof (value as { message?: unknown }).message === 'string'
+    );
 }
 
 /**
