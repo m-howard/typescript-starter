@@ -6,3 +6,5 @@ coverage
 *.log
 package-lock.json
 yarn.lock
+# Generated from src/maintenance/schema; must stay byte-identical to the emitter.
+schemas/

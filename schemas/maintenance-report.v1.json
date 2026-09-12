@@ -1,0 +1,1133 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/m-howard/typescript-starter/schemas/maintenance-report.v1.json",
+    "title": "Maintenance report (collect stage)",
+    "description": "Deterministic inventory of maintenance drift across the self-hosted runner fleet. Produced by the collect stage; consumed by the assess stage.",
+    "type": "object",
+    "properties": {
+        "schemaVersion": {
+            "type": "string",
+            "const": "1.0.0"
+        },
+        "stage": {
+            "type": "string",
+            "const": "collect"
+        },
+        "generatedAt": {
+            "$ref": "#/$defs/IsoDateTime"
+        },
+        "repository": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "owner": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "commitSha": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "ref": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "name",
+                "owner",
+                "commitSha",
+                "ref"
+            ],
+            "additionalProperties": false
+        },
+        "runtime": {
+            "type": "object",
+            "properties": {
+                "node": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "npm": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "platform": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "offline": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "node",
+                "npm",
+                "platform",
+                "offline"
+            ],
+            "additionalProperties": false
+        },
+        "config": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                },
+                "version": {
+                    "type": "number",
+                    "const": 1
+                }
+            },
+            "required": [
+                "path",
+                "sha256",
+                "version"
+            ],
+            "additionalProperties": false
+        },
+        "collectorRuns": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/CollectorRun"
+            }
+        },
+        "findings": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/Finding"
+            }
+        },
+        "summary": {
+            "$ref": "#/$defs/ReportSummary"
+        }
+    },
+    "required": [
+        "schemaVersion",
+        "stage",
+        "generatedAt",
+        "repository",
+        "runtime",
+        "config",
+        "collectorRuns",
+        "findings",
+        "summary"
+    ],
+    "additionalProperties": false,
+    "$defs": {
+        "IsoDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "CollectorRun": {
+            "type": "object",
+            "properties": {
+                "collector": {
+                    "$ref": "#/$defs/CollectorId"
+                },
+                "status": {
+                    "$ref": "#/$defs/CollectorStatus"
+                },
+                "startedAt": {
+                    "$ref": "#/$defs/IsoDateTime"
+                },
+                "durationMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                },
+                "findingCount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                },
+                "unresolvedCount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/CollectorError"
+                    }
+                },
+                "skippedReason": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "collector",
+                "status",
+                "startedAt",
+                "durationMs",
+                "findingCount",
+                "unresolvedCount",
+                "errors",
+                "skippedReason"
+            ],
+            "additionalProperties": false
+        },
+        "CollectorId": {
+            "type": "string",
+            "enum": [
+                "npm",
+                "github-actions",
+                "arc",
+                "eks",
+                "images"
+            ]
+        },
+        "CollectorStatus": {
+            "type": "string",
+            "enum": [
+                "ok",
+                "partial",
+                "failed",
+                "skipped"
+            ]
+        },
+        "CollectorError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "$ref": "#/$defs/CollectorErrorCode"
+                },
+                "message": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "target": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "retryable": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "code",
+                "message",
+                "target",
+                "retryable"
+            ],
+            "additionalProperties": false
+        },
+        "CollectorErrorCode": {
+            "type": "string",
+            "enum": [
+                "offline",
+                "network",
+                "rate-limited",
+                "timeout",
+                "not-found",
+                "parse-error",
+                "command-failed",
+                "config-error",
+                "unsupported",
+                "internal"
+            ]
+        },
+        "Finding": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9/_.\\-@]*$"
+                },
+                "fingerprint": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{32}$"
+                },
+                "fingerprintVersion": {
+                    "type": "string",
+                    "const": "fp1"
+                },
+                "stateHash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{32}$"
+                },
+                "collector": {
+                    "$ref": "#/$defs/CollectorId"
+                },
+                "kind": {
+                    "$ref": "#/$defs/FindingKind"
+                },
+                "subject": {
+                    "$ref": "#/$defs/Subject"
+                },
+                "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                },
+                "detail": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "versions": {
+                    "$ref": "#/$defs/Versions"
+                },
+                "latestResolution": {
+                    "$ref": "#/$defs/LatestResolution"
+                },
+                "severity": {
+                    "$ref": "#/$defs/SeverityDecision"
+                },
+                "advisory": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Advisory"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "lifecycle": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Lifecycle"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "unresolved": {
+                    "type": "boolean"
+                },
+                "remediationHint": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "references": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "uri"
+                    }
+                },
+                "evidence": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/Evidence"
+                    }
+                },
+                "discriminator": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "id",
+                "fingerprint",
+                "fingerprintVersion",
+                "stateHash",
+                "collector",
+                "kind",
+                "subject",
+                "title",
+                "detail",
+                "versions",
+                "latestResolution",
+                "severity",
+                "advisory",
+                "lifecycle",
+                "unresolved",
+                "remediationHint",
+                "references",
+                "evidence",
+                "discriminator",
+                "tags"
+            ],
+            "additionalProperties": false,
+            "title": "Finding",
+            "description": "An observed maintenance fact emitted by the collect stage. Contains no judgement, recommendation, assessment or issue linkage."
+        },
+        "FindingKind": {
+            "type": "string",
+            "enum": [
+                "dependency-outdated",
+                "dependency-vulnerable",
+                "dependency-deprecated",
+                "action-outdated",
+                "action-unpinned",
+                "image-base-outdated",
+                "image-tool-outdated",
+                "image-distro-eol",
+                "chart-outdated",
+                "controller-outdated",
+                "cluster-version-outdated",
+                "cluster-version-eol",
+                "addon-outdated",
+                "upstream-unresolved",
+                "config-stale"
+            ]
+        },
+        "Subject": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "$ref": "#/$defs/SubjectKind"
+                },
+                "id": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "displayName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "ecosystem": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "scope": {
+                    "type": "string",
+                    "enum": [
+                        "runtime",
+                        "dev",
+                        "build",
+                        "infra",
+                        "unknown"
+                    ]
+                }
+            },
+            "required": [
+                "kind",
+                "id",
+                "displayName",
+                "ecosystem",
+                "scope"
+            ],
+            "additionalProperties": false
+        },
+        "SubjectKind": {
+            "type": "string",
+            "enum": [
+                "npm-package",
+                "github-action",
+                "container-image",
+                "image-tool",
+                "helm-chart",
+                "k8s-controller",
+                "eks-cluster",
+                "eks-addon",
+                "maintenance-config",
+                "collector"
+            ]
+        },
+        "Versions": {
+            "type": "object",
+            "properties": {
+                "declared": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "observed": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "latest": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "bump": {
+                    "$ref": "#/$defs/SemverBump"
+                },
+                "majorsBehind": {
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            },
+            "required": [
+                "declared",
+                "observed",
+                "latest",
+                "bump",
+                "majorsBehind"
+            ],
+            "additionalProperties": false
+        },
+        "SemverBump": {
+            "type": "string",
+            "enum": [
+                "major",
+                "minor",
+                "patch",
+                "prerelease",
+                "none",
+                "unknown"
+            ]
+        },
+        "LatestResolution": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "resolved",
+                        "unresolved",
+                        "not-applicable"
+                    ]
+                },
+                "version": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "ref": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "method": {
+                    "$ref": "#/$defs/ProvenanceMethod"
+                },
+                "confidence": {
+                    "$ref": "#/$defs/Confidence"
+                },
+                "retrievedAt": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/IsoDateTime"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "reason": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "status",
+                "version",
+                "ref",
+                "method",
+                "confidence",
+                "retrievedAt",
+                "reason"
+            ],
+            "additionalProperties": false
+        },
+        "ProvenanceMethod": {
+            "type": "string",
+            "enum": [
+                "npm-registry",
+                "github-release",
+                "github-tag",
+                "oci-registry",
+                "helm-oci",
+                "static-config",
+                "aws-cli",
+                "support-calendar",
+                "not-attempted"
+            ]
+        },
+        "Confidence": {
+            "type": "string",
+            "enum": [
+                "high",
+                "medium",
+                "low"
+            ],
+            "description": "Trust in the resolved latest version, given how it was obtained."
+        },
+        "SeverityDecision": {
+            "type": "object",
+            "properties": {
+                "severity": {
+                    "$ref": "#/$defs/Severity"
+                },
+                "ruleId": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "ruleVersion": {
+                    "type": "string",
+                    "const": "sev1"
+                },
+                "modifiers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "source": {
+                    "type": "string",
+                    "enum": [
+                        "rule-table",
+                        "config-override"
+                    ]
+                },
+                "reason": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [
+                "severity",
+                "ruleId",
+                "ruleVersion",
+                "modifiers",
+                "source",
+                "reason"
+            ],
+            "additionalProperties": false
+        },
+        "Severity": {
+            "type": "string",
+            "enum": [
+                "critical",
+                "high",
+                "medium",
+                "low",
+                "info"
+            ],
+            "description": "Impact level produced by the deterministic severity rule table."
+        },
+        "Advisory": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "source": {
+                    "type": "string",
+                    "enum": [
+                        "npm-audit",
+                        "github-advisory"
+                    ]
+                },
+                "severity": {
+                    "type": "string",
+                    "enum": [
+                        "critical",
+                        "high",
+                        "moderate",
+                        "low",
+                        "info"
+                    ]
+                },
+                "cvssScore": {
+                    "anyOf": [
+                        {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 10
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "cvssVector": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "cwe": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "url": {
+                    "anyOf": [
+                        {
+                            "type": "string",
+                            "format": "uri"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "vulnerableRange": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "isDirect": {
+                    "type": "boolean"
+                },
+                "fixAvailable": {
+                    "type": "boolean"
+                },
+                "fixedVersion": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "fixIsSemverMajor": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "id",
+                "source",
+                "severity",
+                "cvssScore",
+                "cvssVector",
+                "cwe",
+                "title",
+                "url",
+                "vulnerableRange",
+                "isDirect",
+                "fixAvailable",
+                "fixedVersion",
+                "fixIsSemverMajor"
+            ],
+            "additionalProperties": false
+        },
+        "Lifecycle": {
+            "type": "object",
+            "properties": {
+                "endOfStandardSupport": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/IsoDate"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "endOfExtendedSupport": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/IsoDate"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "daysUntilEndOfSupport": {
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "deprecated": {
+                    "type": "boolean"
+                },
+                "deprecationMessage": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "calendarSource": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "calendarLastVerified": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/IsoDate"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            },
+            "required": [
+                "endOfStandardSupport",
+                "endOfExtendedSupport",
+                "daysUntilEndOfSupport",
+                "deprecated",
+                "deprecationMessage",
+                "calendarSource",
+                "calendarLastVerified"
+            ],
+            "additionalProperties": false
+        },
+        "IsoDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+        },
+        "Evidence": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "const": "file"
+                        },
+                        "path": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "line": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "column": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "snippet": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 400
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "contentSha256": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "pattern": "^[0-9a-f]{64}$"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "repo": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "ref": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "path",
+                        "line",
+                        "column",
+                        "snippet",
+                        "contentSha256",
+                        "repo",
+                        "ref"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "const": "command"
+                        },
+                        "argv": {
+                            "minItems": 1,
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "cwd": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "exitCode": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "durationMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                        },
+                        "stdoutSha256": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "pattern": "^[0-9a-f]{64}$"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "stderrExcerpt": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 2000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "argv",
+                        "cwd",
+                        "exitCode",
+                        "durationMs",
+                        "stdoutSha256",
+                        "stderrExcerpt"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "const": "http"
+                        },
+                        "url": {
+                            "type": "string",
+                            "format": "uri"
+                        },
+                        "method": {
+                            "type": "string",
+                            "enum": [
+                                "GET",
+                                "HEAD"
+                            ]
+                        },
+                        "status": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                        },
+                        "retrievedAt": {
+                            "$ref": "#/$defs/IsoDateTime"
+                        },
+                        "etag": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "fromCache": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "url",
+                        "method",
+                        "status",
+                        "retrievedAt",
+                        "etag",
+                        "fromCache"
+                    ],
+                    "additionalProperties": false
+                }
+            ]
+        },
+        "ReportSummary": {
+            "type": "object",
+            "properties": {
+                "totalFindings": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                },
+                "bySeverity": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                        },
+                        "high": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                        },
+                        "medium": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                        },
+                        "low": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                        },
+                        "info": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                        }
+                    },
+                    "required": [
+                        "critical",
+                        "high",
+                        "medium",
+                        "low",
+                        "info"
+                    ],
+                    "additionalProperties": false
+                },
+                "byCollector": {
+                    "type": "object",
+                    "properties": {
+                        "npm": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                        },
+                        "github-actions": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                        },
+                        "arc": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                        },
+                        "eks": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                        },
+                        "images": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                        }
+                    },
+                    "required": [
+                        "npm",
+                        "github-actions",
+                        "arc",
+                        "eks",
+                        "images"
+                    ],
+                    "additionalProperties": false
+                },
+                "unresolvedCount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                },
+                "worstStatus": {
+                    "$ref": "#/$defs/CollectorStatus"
+                }
+            },
+            "required": [
+                "totalFindings",
+                "bySeverity",
+                "byCollector",
+                "unresolvedCount",
+                "worstStatus"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

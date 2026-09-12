@@ -17,6 +17,7 @@
     "start:prod": "node bin/index.js",
     "lint": "eslint \"{src,test,scripts}/**/*.{ts,js}\" --fix",
     "lint:check": "eslint \"{src,test,scripts}/**/*.{ts,js}\"",
+    "schema:emit": "ts-node src/maintenance/schema/emit.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",

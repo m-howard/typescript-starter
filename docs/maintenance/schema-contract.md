@@ -81,3 +81,12 @@ which version it emits; consumers pin.
 - **Nullable rather than optional** for absent values, so the shape is stable
   and consumers need not distinguish "missing" from "not applicable".
 - **Byte-stable output.** Regeneration produces an identical file; CI diffs it.
+- **No custom `x-` keywords.** Ajv's strict mode rejects unknown keywords, and a
+  published contract should validate without consumers relaxing their validator.
+  The schema version travels as `properties.schemaVersion.const`.
+- **Optional as well as nullable, for the two pass-2 fields only.** `assessment`
+  and `issue` are `.nullable().optional()`. A collect-stage `Finding` has no
+  `assessment` key at all, so requiring it — even nullably — would make
+  `EnrichedFinding` reject every real collector finding and break the
+  compatibility property above. Absent and null both mean "not assessed". Every
+  collect-stage field stays nullable-and-required.
