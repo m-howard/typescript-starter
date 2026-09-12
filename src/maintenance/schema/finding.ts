@@ -44,6 +44,7 @@ export const SubjectKindSchema = z
         'collector',
     ])
     .meta({ id: 'SubjectKind' });
+export type SubjectKind = z.infer<typeof SubjectKindSchema>;
 
 /** Where a dependency sits, which drives the development-scope severity demotion. */
 export const SubjectScopeSchema = z.enum(['runtime', 'dev', 'build', 'infra', 'unknown']);
