@@ -19,6 +19,7 @@ function makeFacts(overrides: Partial<SeverityFacts> = {}): SeverityFacts {
         unresolved: false,
         bump: 'unknown',
         majorsBehind: null,
+        zeroMajor: false,
         advisorySeverity: null,
         deprecated: false,
         endOfSupport: null,
@@ -77,6 +78,7 @@ describe('computeSeverity', () => {
             ['SEV-VULN-MODERATE', { advisorySeverity: 'moderate' }, 'medium'],
             ['SEV-DEPRECATED', { deprecated: true }, 'medium'],
             ['SEV-DRIFT-MAJOR', { bump: 'major', majorsBehind: 1 }, 'medium'],
+            ['SEV-DRIFT-ZEROMAJOR', { bump: 'minor', zeroMajor: true }, 'medium'],
             ['SEV-CONFIG-STALE', { kind: 'config-stale' }, 'medium'],
             ['SEV-VULN-LOW', { advisorySeverity: 'low' }, 'low'],
             [
@@ -135,6 +137,28 @@ describe('computeSeverity', () => {
             });
 
             expect(decision.ruleId).toBe('SEV-EOL-PAST');
+        });
+
+        it('should score a pre-1.0 minor bump above a stable one', () => {
+            // ARC 0.10.1 -> 0.14.2 reports as a minor, but 0.x is where a project
+            // publishes breaking changes, so `low` would understate it.
+            const preRelease = computeSeverity(makeFacts({ bump: 'minor', zeroMajor: true }), {
+                clock,
+            });
+            const stable = computeSeverity(makeFacts({ bump: 'minor', zeroMajor: false }), {
+                clock,
+            });
+
+            expect(preRelease.severity).toBe('medium');
+            expect(stable.severity).toBe('low');
+        });
+
+        it('should leave a pre-1.0 patch bump as routine', () => {
+            const decision = computeSeverity(makeFacts({ bump: 'patch', zeroMajor: true }), {
+                clock,
+            });
+
+            expect(decision.ruleId).toBe('SEV-DRIFT-PATCH');
         });
 
         it('should not fire an end-of-life rule beyond the widest window', () => {

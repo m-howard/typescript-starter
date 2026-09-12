@@ -23,6 +23,14 @@ export interface SeverityFacts {
     bump: SemverBump;
     majorsBehind: number | null;
     /**
+     * True when the observed version is pre-1.0.
+     *
+     * Under semver, 0.x minor bumps are the breaking-change channel, so a pre-1.0
+     * project moving 0.10 to 0.14 is not the routine drift that `minor` suggests.
+     * `bump` stays factual; this fact lets the rule table treat it as more urgent.
+     */
+    zeroMajor: boolean;
+    /**
      * The advisory's own severity, or null when the finding is not advisory-driven.
      * The CVSS score is deliberately not an input — see REQ-SEV-055.
      */

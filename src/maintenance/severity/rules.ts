@@ -139,6 +139,14 @@ export const SEVERITY_RULES: readonly SeverityRule[] = Object.freeze([
         describe: () => 'Declared version is a major version behind latest.',
     },
     {
+        id: 'SEV-DRIFT-ZEROMAJOR',
+        severity: 'medium',
+        matches: (f) => f.zeroMajor && (f.bump === 'minor' || f.bump === 'major'),
+        describe: () =>
+            'A pre-1.0 dependency is behind by a minor version, which is where a 0.x ' +
+            'project publishes breaking changes.',
+    },
+    {
         id: 'SEV-CONFIG-STALE',
         severity: 'medium',
         matches: (f) => f.kind === 'config-stale',
