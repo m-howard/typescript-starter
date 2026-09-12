@@ -1,0 +1,51 @@
+# Inventory of record for the maintenance scan.
+#
+# Everything the collectors read is declared here explicitly - there is no globbing,
+# so what gets scanned is visible in one reviewable file.
+# See docs/maintenance/adr/0005-no-globbing-in-file-provider.md
+#
+# Quote every version. YAML parses an unquoted 1.30 as the number 1.3 and loses the
+# trailing zero; the schema rejects a bare number and says so.
+version: 1
+
+defaults:
+    httpTimeoutMs: 15000
+    httpRetries: 2
+    commandTimeoutMs: 180000
+    offline: false
+
+sources:
+    github:
+        apiBaseUrl: https://api.github.com
+        # Name of the environment variable, never the token itself.
+        # Without it the GitHub API allows 60 requests an hour and findings that cannot
+        # be resolved are reported as unresolved rather than as "up to date".
+        tokenEnv: GITHUB_TOKEN
+    npm:
+        registryUrl: https://registry.npmjs.org
+
+collectors:
+    # A collector absent from this block is not configured, and the runner records it as
+    # skipped. arc, eks and images are added when infra/ declares real fleet state.
+    npm:
+        enabled: true
+        # package.json is authoritative for the declared set: npm outdated reports only
+        # what is outdated, and its contents depend on the installed tree.
+        # See docs/maintenance/adr/0001-package-json-authoritative.md
+        manifest: package.json
+        lockfile: package-lock.json
+        runOutdated: true
+        runAudit: true
+        ignore: []
+
+    githubActions:
+        enabled: true
+        workflows:
+            - .github/workflows/ci.yml
+        requireShaPins: true
+        ignore: []
+
+severity:
+    # Every override needs a reason and an expiry. An expired override is ignored and
+    # raises a config-stale finding naming itself.
+    overrides: []

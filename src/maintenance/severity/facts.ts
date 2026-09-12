@@ -7,6 +7,7 @@
  */
 
 import { FindingKind, SemverBump } from '../schema';
+import { SeverityOverrideConfig } from '../schema/config';
 import { SubjectScopeSchema } from '../schema/finding';
 import { z } from 'zod';
 
@@ -46,20 +47,10 @@ export interface DerivedSeverityFacts extends SeverityFacts {
     eolDays: number | null;
 }
 
-/** A severity override declared in configuration. */
-export interface SeverityOverride {
-    /** Matches `Finding.id`. One of `id` or `fingerprint` must be given. */
-    id?: string;
-    /** Matches `Finding.fingerprint`. */
-    fingerprint?: string;
-    severity: import('../schema').Severity;
-    /** Why the override exists. Required, so a reviewer can judge it. */
-    reason: string;
-    /**
-     * ISO date after which the override is ignored.
-     *
-     * Required by design: a permanent override is how a maintenance queue goes
-     * silently blind (REQ-SEV-053, REQ-SEV-054).
-     */
-    expiresAt: string;
-}
+/**
+ * A severity override declared in configuration.
+ *
+ * Re-exported from the config schema rather than restated, so the shape the rule table
+ * consumes cannot drift from the shape the loader validates.
+ */
+export type SeverityOverride = SeverityOverrideConfig;
