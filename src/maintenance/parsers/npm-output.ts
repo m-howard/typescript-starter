@@ -13,6 +13,7 @@
 
 import { z } from 'zod';
 import { ParseError, toError } from '../errors';
+import { firstZodIssue } from '../schema/issues';
 
 /* ------------------------------------------------------------------ outdated ----- */
 
@@ -44,7 +45,7 @@ export function parseNpmOutdated(stdout: string): NpmOutdatedReport {
     const result = NpmOutdatedReportSchema.safeParse(document);
     if (!result.success) {
         throw new ParseError(
-            `npm outdated output did not match the expected shape: ${firstIssue(result.error)}`,
+            `npm outdated output did not match the expected shape: ${firstZodIssue(result.error)}`,
             { target: 'npm outdated' },
         );
     }
@@ -106,7 +107,7 @@ export function parseNpmAudit(stdout: string): NpmAuditReport {
     const result = NpmAuditReportSchema.safeParse(document);
     if (!result.success) {
         throw new ParseError(
-            `npm audit output did not match the expected shape: ${firstIssue(result.error)}`,
+            `npm audit output did not match the expected shape: ${firstZodIssue(result.error)}`,
             { target: 'npm audit' },
         );
     }
@@ -177,10 +178,4 @@ function parseJson(stdout: string, label: string): unknown {
             target: label,
         });
     }
-}
-
-function firstIssue(error: z.ZodError): string {
-    const issue = error.issues[0];
-    const location = issue.path.length === 0 ? '(root)' : issue.path.join('.');
-    return `${location}: ${issue.message}`;
 }

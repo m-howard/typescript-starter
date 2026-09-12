@@ -62,6 +62,59 @@ export function coerceVersionCore(raw: string): ParsedVersion | null {
     return { raw, version: coerced.version, prerelease: false };
 }
 
+/**
+ * Parse a version for comparison, accepting the loose forms real files contain.
+ *
+ * Strict first, coercion second. Use this only where the value is already known to be a
+ * version — a captured tool pin, a calendar entry, a resolved latest — never over a raw
+ * list of registry tags, where coercion would invent `123.0.0` out of `sha-abc123` and
+ * hand it back as the newest release.
+ */
+export function parseVersionForComparison(raw: string): ParsedVersion | null {
+    return parseStrictVersion(raw) ?? coerceVersionCore(raw);
+}
+
+/** How precisely a version was written. */
+export type VersionPrecision = 'major' | 'minor' | 'patch';
+
+/**
+ * How many components a version reference actually states.
+ *
+ * A workflow pinning `actions/checkout@v4` has said "the 4 line", not "4.0.0". Treating
+ * it as the latter reports it two patches behind the moment `v4.0.1` ships, when the tag
+ * it names already points there. Returns null for anything that is not a numeric
+ * version reference, such as a branch name or a commit SHA.
+ */
+export function versionPrecision(raw: string): VersionPrecision | null {
+    const core = raw.trim().replace(/^v/i, '').split(/[-+]/)[0];
+    const segments = core.split('.');
+    if (segments.length > 3 || segments.some((segment) => !/^\d+$/.test(segment))) {
+        return null;
+    }
+    // The guard above leaves one, two or three numeric segments, so the index is always
+    // in range; a fallback here would be a branch that can never be taken.
+    return (['major', 'minor', 'patch'] as const)[segments.length - 1];
+}
+
+/**
+ * Reduce a version to the components a reference of the given precision states.
+ *
+ * Comparing `v4` against a truncated `4.0.0` rather than the real `4.2.2` is what makes
+ * a moving major tag read as current until the major itself moves. `versions.latest`
+ * still records the true latest — only the comparison is narrowed.
+ */
+export function truncateVersion(
+    version: ParsedVersion,
+    precision: VersionPrecision,
+): ParsedVersion {
+    if (precision === 'patch') {
+        return version;
+    }
+    const major = semver.major(version.version);
+    const minor = precision === 'minor' ? semver.minor(version.version) : 0;
+    return { raw: version.raw, version: `${major}.${minor}.0`, prerelease: false };
+}
+
 export interface SelectLatestOptions {
     /** Include prerelease versions. Off by default: an RC is not the latest release. */
     includePrereleases?: boolean;

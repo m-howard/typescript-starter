@@ -159,6 +159,7 @@ export const DistroCalendarEntrySchema = z.strictObject({
     release: VersionStringSchema,
     endOfStandardSupport: IsoDateSchema,
 });
+export type DistroCalendarEntry = z.infer<typeof DistroCalendarEntrySchema>;
 
 export const ImageToolPinSchema = z.strictObject({
     id: z.string().min(1),
@@ -167,6 +168,7 @@ export const ImageToolPinSchema = z.strictObject({
     source: SourceRefSchema,
     compare: z.enum(['exact', 'major', 'minor']).default('exact'),
 });
+export type ImageToolPin = z.infer<typeof ImageToolPinSchema>;
 
 export const ImageBaseSchema = z.strictObject({
     source: SourceRefSchema,
@@ -178,6 +180,7 @@ export const ImageBaseSchema = z.strictObject({
     /** Route the tag through the distribution calendar rather than semver comparison. */
     distroFromCodenameSuffix: z.boolean().default(false),
 });
+export type ImageBase = z.infer<typeof ImageBaseSchema>;
 
 export const ImagesCollectorSchema = z.strictObject({
     enabled: z.boolean().default(true),

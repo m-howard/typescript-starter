@@ -20,6 +20,16 @@ import {
     CommandRunner,
 } from '../../src/maintenance/exec/command-runner';
 import { HttpClient, HttpRequest, HttpResponse } from '../../src/maintenance/http/http-client';
+import {
+    ProvenanceMethod,
+    ResolvedVersion,
+    VersionSourceRegistry,
+} from '../../src/maintenance/sources';
+import { Confidence } from '../../src/maintenance/schema';
+import { MaintenanceConfigSchema } from '../../src/maintenance/schema/config';
+import { CollectorContext } from '../../src/maintenance/types';
+import { FixedClock } from '../../src/maintenance/clock';
+import { Logger } from '../../src/utils/logger';
 
 /** A file provider backed by an in-memory map. */
 export class InMemoryFileProvider implements FileProvider {
@@ -152,4 +162,129 @@ export class FakeCommandRunner implements CommandRunner {
             ...entry,
         });
     }
+}
+
+/** A logger that records instead of writing, so a spec can assert what was reported. */
+export class RecordingLogger extends Logger {
+    public readonly lines: Array<{ level: string; message: string }> = [];
+
+    public debug(message: string): void {
+        this.lines.push({ level: 'debug', message });
+    }
+
+    public info(message: string): void {
+        this.lines.push({ level: 'info', message });
+    }
+
+    public warn(message: string): void {
+        this.lines.push({ level: 'warn', message });
+    }
+
+    public error(message: string): void {
+        this.lines.push({ level: 'error', message });
+    }
+
+    /** Every message logged at a level, for a single readable assertion. */
+    public at(level: string): string[] {
+        return this.lines.filter((line) => line.level === level).map((line) => line.message);
+    }
+}
+
+/**
+ * A version source registry whose answers are declared per reference.
+ *
+ * Like the other fakes it throws on an unregistered reference: a collector that asks for
+ * a source the spec did not set up is doing something the spec has not described.
+ */
+export class FakeSourceRegistry extends VersionSourceRegistry {
+    /** References resolved during the test, in order. */
+    public readonly asked: string[] = [];
+
+    private readonly answers = new Map<string, ResolvedVersion | Error>();
+
+    constructor(answers: Record<string, ResolvedVersion | Error> = {}) {
+        super();
+        for (const [ref, answer] of Object.entries(answers)) {
+            this.answers.set(ref, answer);
+        }
+    }
+
+    public on(ref: string, answer: ResolvedVersion | Error): this {
+        this.answers.set(ref, answer);
+        return this;
+    }
+
+    public resolve(rawRef: string): Promise<ResolvedVersion> {
+        this.asked.push(rawRef);
+        const answer = this.answers.get(rawRef);
+        if (answer === undefined) {
+            return Promise.reject(
+                new Error(
+                    `FakeSourceRegistry has no answer registered for ${rawRef}. ` +
+                        'Register one, or the test is reaching for a real upstream.',
+                ),
+            );
+        }
+        return answer instanceof Error ? Promise.reject(answer) : Promise.resolve(answer);
+    }
+}
+
+/** A resolved answer, for readability at the call site. */
+export function fakeResolved(
+    version: string,
+    method: ProvenanceMethod = 'github-release',
+    confidence: Confidence = 'high',
+): ResolvedVersion {
+    return {
+        status: 'resolved',
+        version,
+        raw: version,
+        method,
+        confidence,
+        reason: null,
+        evidence: [],
+    };
+}
+
+/** An unresolved answer, for readability at the call site. */
+export function fakeUnresolved(
+    reason: string,
+    method: ProvenanceMethod = 'not-attempted',
+): ResolvedVersion {
+    return {
+        status: 'unresolved',
+        version: null,
+        raw: null,
+        method,
+        confidence: 'low',
+        reason,
+        evidence: [],
+    };
+}
+
+export interface FakeContextOverrides extends Partial<Omit<CollectorContext, 'config'>> {
+    config?: unknown;
+}
+
+/**
+ * Assemble a `CollectorContext` from fakes, filling in whatever a spec does not care
+ * about.
+ *
+ * The config is parsed rather than cast, so a spec cannot accidentally hand a collector
+ * a shape the loader would have rejected.
+ */
+export function fakeContext(overrides: FakeContextOverrides = {}): CollectorContext {
+    const { config, ...rest } = overrides;
+    return {
+        config: MaintenanceConfigSchema.parse(config ?? { version: 1 }),
+        files: new InMemoryFileProvider(),
+        commands: new FakeCommandRunner(),
+        sources: new FakeSourceRegistry(),
+        logger: new RecordingLogger(),
+        clock: new FixedClock(),
+        offline: false,
+        repoRoot: '/repo',
+        configPath: 'maintenance.config.yaml',
+        ...rest,
+    };
 }

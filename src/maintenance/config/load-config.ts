@@ -16,6 +16,7 @@ import * as YAML from 'yaml';
 import { ConfigError, ParseError, toError } from '../errors';
 import { FileProvider } from '../providers/file-provider';
 import { MaintenanceConfig, MaintenanceConfigSchema } from '../schema/config';
+import { formatZodIssues } from '../schema/issues';
 
 /** Where the config lives when the CLI is given no `--config`. */
 export const DEFAULT_CONFIG_PATH = 'maintenance.config.yaml';
@@ -68,18 +69,10 @@ function parseYaml(contents: string, path: string): unknown {
     }
 }
 
-/**
- * Render validation issues as one message per line, each naming its path.
- *
- * A configuration error is read by a human editing a YAML file, so the path matters
- * more than the stack.
- */
+/** Render validation issues as an indented list, one per line. */
 function formatIssues(error: z.ZodError): string {
-    return error.issues
-        .map((issue) => {
-            const location = issue.path.length === 0 ? '(root)' : issue.path.join('.');
-            return `  - ${location}: ${issue.message}`;
-        })
+    return formatZodIssues(error)
+        .map((line) => `  - ${line}`)
         .join('\n');
 }
 

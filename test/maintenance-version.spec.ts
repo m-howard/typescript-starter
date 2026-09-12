@@ -2,7 +2,10 @@ import {
     coerceVersionCore,
     compareVersions,
     parseStrictVersion,
+    parseVersionForComparison,
     selectLatestVersion,
+    truncateVersion,
+    versionPrecision,
 } from '../src/maintenance/version';
 
 describe('parseStrictVersion', () => {
@@ -174,5 +177,69 @@ describe('compareVersions', () => {
         );
 
         expect(result.bump).toBe('none');
+    });
+});
+
+describe('parseVersionForComparison', () => {
+    it.each([
+        ['5.7.3', '5.7.3'],
+        ['v4', '4.0.0'],
+        ['1.30', '1.30.0'],
+        ['v1.19.2-eksbuild.1', '1.19.2-eksbuild.1'],
+    ])('should read %s as %s', (raw: string, expected: string) => {
+        expect(parseVersionForComparison(raw)?.version).toBe(expected);
+    });
+
+    it('should return null for something that is not a version at all', () => {
+        expect(parseVersionForComparison('bullseye')).toBeNull();
+    });
+});
+
+describe('versionPrecision', () => {
+    it.each([
+        ['v4', 'major'],
+        ['4', 'major'],
+        ['v4.2', 'minor'],
+        ['4.2.2', 'patch'],
+        ['v4.2.2-rc.1', 'patch'],
+        ['4.2.2+build.7', 'patch'],
+    ])('should read %s as %s precision', (raw: string, expected: string) => {
+        expect(versionPrecision(raw)).toBe(expected);
+    });
+
+    it.each([
+        ['a branch name', 'main'],
+        ['a codename', 'bullseye'],
+        ['a commit sha', 'a'.repeat(40)],
+        ['four segments', '1.2.3.4'],
+        ['an empty string', ''],
+    ])('should return null for %s', (_label: string, raw: string) => {
+        expect(versionPrecision(raw)).toBeNull();
+    });
+});
+
+describe('truncateVersion', () => {
+    const parsed = (raw: string) => {
+        const version = parseVersionForComparison(raw);
+        if (version === null) {
+            throw new Error(`test fixture is not a version: ${raw}`);
+        }
+        return version;
+    };
+
+    it('should reduce to the major line', () => {
+        expect(truncateVersion(parsed('4.3.1'), 'major').version).toBe('4.0.0');
+    });
+
+    it('should reduce to the minor line', () => {
+        expect(truncateVersion(parsed('4.3.1'), 'minor').version).toBe('4.3.0');
+    });
+
+    it('should leave a patch-precision comparison alone', () => {
+        expect(truncateVersion(parsed('4.3.1'), 'patch').version).toBe('4.3.1');
+    });
+
+    it('should keep the raw text so evidence still shows what upstream returned', () => {
+        expect(truncateVersion(parsed('4.3.1'), 'major').raw).toBe('4.3.1');
     });
 });

@@ -45,6 +45,62 @@ collectors:
         requireShaPins: true
         ignore: []
 
+    images:
+        enabled: true
+        # Debian codenames carry no version ordering, so support dates come from a
+        # committed table rather than from a registry. Re-check it against the
+        # distribution's published schedule and move lastVerified when you do.
+        distroCalendar:
+            lastVerified: '2026-09-12'
+            staleAfterDays: 180
+            codenames:
+                buster:
+                    distro: Debian
+                    release: '10'
+                    endOfStandardSupport: '2022-09-10'
+                bullseye:
+                    distro: Debian
+                    release: '11'
+                    endOfStandardSupport: '2026-08-31'
+                bookworm:
+                    distro: Debian
+                    release: '12'
+                    endOfStandardSupport: '2028-06-10'
+                trixie:
+                    distro: Debian
+                    release: '13'
+                    endOfStandardSupport: '2030-06-30'
+                focal:
+                    distro: Ubuntu
+                    release: '20.04'
+                    endOfStandardSupport: '2025-05-31'
+                jammy:
+                    distro: Ubuntu
+                    release: '22.04'
+                    endOfStandardSupport: '2027-06-01'
+                noble:
+                    distro: Ubuntu
+                    release: '24.04'
+                    endOfStandardSupport: '2029-06-01'
+        dockerfiles:
+            - path: .devcontainer/Dockerfile
+              baseImages:
+                  mcr.microsoft.com/devcontainers/base:
+                      source: oci:mcr.microsoft.com/devcontainers/base
+                      # The registry returns thousands of tags for this repository; the
+                      # ones that matter here are Debian codenames.
+                      tagPattern: '^(buster|bullseye|bookworm|trixie)$'
+                      distroFromCodenameSuffix: true
+              toolPins:
+                  - id: pulumi
+                    pattern: 'get\.pulumi\.com \| sh -s -- --version ([0-9][^\s\\]*)'
+                    source: github-release:pulumi/pulumi
+                    compare: exact
+                  - id: nodejs
+                    pattern: 'deb\.nodesource\.com/setup_([0-9]+)\.x'
+                    source: github-release:nodejs/node
+                    compare: major
+
 severity:
     # Every override needs a reason and an expiry. An expired override is ignored and
     # raises a config-stale finding naming itself.

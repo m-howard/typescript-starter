@@ -44,6 +44,8 @@ fact. *Source* — an upstream service consulted for a latest version.
 | **REQ-SCH-006** | Unwanted | If the Zod report schema contains a construct that cannot be represented in JSON Schema, then generation shall fail with an error naming the construct. |
 | **REQ-SCH-007** | Ubiquitous | The `EnrichedFinding` schema shall accept every value that the `Finding` schema accepts. |
 | **REQ-SCH-008** | Event-driven | When the committed JSON Schema differs from the schema generated from source, the test suite shall fail. |
+| **REQ-SCH-009** | Ubiquitous | A Finding shall be emitted only when the condition its `kind` names holds; a subject already at its latest version shall produce no drift Finding. |
+| **REQ-SCH-010** | Ubiquitous | Every Finding shall be assembled, scored and validated against the Finding schema by a single shared builder, so identity and severity cannot differ between collectors. |
 
 ## EVI — Evidence and provenance
 
@@ -174,6 +176,9 @@ fact. *Source* — an upstream service consulted for a latest version.
 | **REQ-GHA-014** | Event-driven | When an action reference is a local path, the collector shall skip it without emitting a Finding or an error. |
 | **REQ-GHA-015** | Unwanted | If the latest version of a referenced action cannot be resolved, then the collector shall emit the Finding as unresolved rather than omitting it. |
 | **REQ-GHA-016** | Unwanted | If a workflow file cannot be parsed, then the collector shall record a `parse-error` naming the file and continue with the remaining files. |
+| **REQ-GHA-017** | Event-driven | When an action reference states fewer version components than the resolved latest version, the collector shall compare only the components the reference states, and shall still record the full latest version. |
+| **REQ-GHA-018** | Ubiquitous | The collector shall emit at most one Finding of each kind per referenced repository, carrying every occurrence of that repository as evidence. |
+| **REQ-GHA-019** | Event-driven | When an action is pinned by commit SHA, the collector shall read its version from a trailing version comment, and where none is present shall report that the version could not be determined. |
 
 ## ARC — Actions Runner Controller collector
 
@@ -214,6 +219,9 @@ fact. *Source* — an upstream service consulted for a latest version.
 | **REQ-IMG-017** | Event-driven | When a base image is pinned by digest, the collector shall record the pin and shall not report it as drift. |
 | **REQ-IMG-018** | Ubiquitous | The collector shall report the line number of each base image reference and tool pin. |
 | **REQ-IMG-019** | Event-driven | When a configured tool pin pattern matches no line in a Dockerfile, the collector shall emit no Finding for that pin and shall not error. |
+| **REQ-IMG-020** | Unwanted | If a Dockerfile declares a base image that the configuration does not, then the collector shall emit a `config-stale` Finding naming the image rather than passing over it. |
+| **REQ-IMG-021** | Event-driven | When the distribution calendar's `lastVerified` is older than `staleAfterDays`, the collector shall emit a `config-stale` Finding naming the calendar. |
+| **REQ-IMG-022** | Unwanted | If a base image tag is read as a distribution codename and the calendar has no entry for it, then the collector shall emit a `config-stale` Finding naming the codename. |
 
 ## WFL — Scheduled workflow
 
@@ -254,7 +262,7 @@ and `test/`.
 
 | Requirement | Implemented in | Verified by |
 | --- | --- | --- |
-| REQ-SCH-001…008 | `schema/report.ts`, `schema/json-schema.ts` | `test/maintenance-schema.spec.ts`, `test/maintenance-json-schema.spec.ts` |
+| REQ-SCH-001…010 | `schema/report.ts`, `schema/json-schema.ts`, `collectors/build-finding.ts` | `test/maintenance-schema.spec.ts`, `test/maintenance-json-schema.spec.ts`, `test/maintenance-build-finding.spec.ts` |
 | REQ-EVI-001…006 | `schema/common.ts`, all collectors | `test/maintenance-schema.spec.ts`, per-collector specs |
 | REQ-ID-001…007 | `identity/fingerprint.ts` | `test/maintenance-fingerprint.spec.ts` |
 | REQ-SEV-001…056 | `severity/rules.ts`, `severity/facts.ts` | `test/maintenance-severity.spec.ts` |
@@ -263,10 +271,10 @@ and `test/`.
 | REQ-ERR-030…037 | `collectors/collector.ts`, `errors.ts` | `test/maintenance-runner.spec.ts` |
 | REQ-RPT-001…007 | `runner.ts` | `test/maintenance-runner.spec.ts` |
 | REQ-CLI-001…007 | `cli.ts` | `test/maintenance-cli.spec.ts` |
-| REQ-NPM-010…020 | `collectors/npm-collector.ts`, `parsers/npm-*.ts`, `exec/command-runner.ts` | `test/maintenance-collector-npm.spec.ts`, `test/maintenance-command-runner.spec.ts` |
-| REQ-GHA-010…016 | `collectors/github-actions-collector.ts`, `parsers/workflow-yaml.ts` | `test/maintenance-collector-github-actions.spec.ts` |
-| REQ-ARC-010…015 | `collectors/arc-collector.ts` | `test/maintenance-collector-arc.spec.ts` |
-| REQ-EKS-010…041 | `collectors/eks-collector.ts`, `sources/eks-source.ts` | `test/maintenance-collector-eks.spec.ts` |
-| REQ-IMG-010…019 | `collectors/images-collector.ts`, `parsers/dockerfile.ts`, `parsers/tool-pins.ts` | `test/maintenance-collector-images.spec.ts` |
+| REQ-NPM-010…020 | `collectors/npm.ts`, `parsers/npm-*.ts`, `exec/command-runner.ts` | `test/maintenance-collector-npm.spec.ts`, `test/maintenance-command-runner.spec.ts` |
+| REQ-GHA-010…019 | `collectors/github-actions.ts`, `parsers/workflow-yaml.ts` | `test/maintenance-collector-github-actions.spec.ts` |
+| REQ-ARC-010…015 | `collectors/arc.ts` | `test/maintenance-collector-arc.spec.ts` |
+| REQ-EKS-010…041 | `collectors/eks.ts`, `sources/eks-source.ts` | `test/maintenance-collector-eks.spec.ts` |
+| REQ-IMG-010…022 | `collectors/images.ts`, `parsers/dockerfile.ts`, `parsers/tool-pins.ts` | `test/maintenance-collector-images.spec.ts` |
 | REQ-WFL-001…006 | `.github/workflows/maintenance-scan.yml` | Reviewed at step 12; REQ-WFL-005 verified by `test/maintenance.e2e.spec.ts` |
 | REQ-P2-001…008 | — | DEFERRED to pass 2 |

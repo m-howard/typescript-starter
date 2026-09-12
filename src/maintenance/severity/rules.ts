@@ -36,7 +36,17 @@ const SEVERITY_LADDER: readonly Severity[] = (Object.keys(SEVERITY_RANK) as Seve
 /** Days-until-support-ends thresholds, ordered most to least urgent. */
 const EOL_IMMINENT_DAYS = 30;
 const EOL_SOON_DAYS = 90;
-const EOL_APPROACHING_DAYS = 180;
+
+/**
+ * The outermost end-of-support threshold the table reacts to.
+ *
+ * Exported because a collector needs the same horizon to decide whether an
+ * end-of-life finding is worth emitting at all. Beyond it there is nothing to act on,
+ * and a finding whose kind names a condition that does not hold is noise (REQ-SCH-009).
+ * One constant, so the table and the collectors cannot disagree about where the
+ * horizon sits.
+ */
+export const EOL_HORIZON_DAYS = 180;
 
 /** Majors behind at which drift stops being routine. */
 const MAJORS_BEHIND_URGENT = 2;
@@ -168,7 +178,7 @@ export const SEVERITY_RULES: readonly SeverityRule[] = Object.freeze([
     {
         id: 'SEV-EOL-SOON-180',
         severity: 'low',
-        matches: eolWithin(EOL_APPROACHING_DAYS),
+        matches: eolWithin(EOL_HORIZON_DAYS),
         describe: describeEol,
     },
     {
