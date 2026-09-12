@@ -1,0 +1,92 @@
+{
+  "vulnerabilities": {
+    "@babel/core": {
+      "name": "@babel/core",
+      "severity": "low",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1123528,
+          "name": "@babel/core",
+          "dependency": "@babel/core",
+          "title": "@babel/core: Arbitrary File Read via sourceMappingURL Comment",
+          "url": "https://github.com/advisories/GHSA-4x5r-pxfx-6jf8",
+          "severity": "low",
+          "cwe": [
+            "CWE-22",
+            "CWE-200"
+          ],
+          "cvss": {
+            "score": 3.2,
+            "vectorString": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:C/C:L/I:N/A:N"
+          },
+          "range": "<=7.29.0"
+        }
+      ],
+      "effects": [],
+      "range": "<=7.29.0",
+      "nodes": [
+        "node_modules/@babel/core"
+      ],
+      "fixAvailable": true
+    },
+    "@clerk/backend": {
+      "name": "@clerk/backend",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@clerk/shared",
+        "cookie"
+      ],
+      "effects": [
+        "@clerk/clerk-sdk-node"
+      ],
+      "range": "0.24.1-snapshot.27b5e0a - 1.24.3-snapshot.v20250303105446 || 3.0.0-canary.v20251209150846 - 3.0.0-snapshot.v20260303200735 || 3.0.1-canary.v20260303211310 - 3.0.1-canary.v20260304021901 || 3.0.2-canary.v20260304025552 - 3.0.2-snapshot.v20260309193756 || 3.0.3-canary.v20260309212303 - 3.2.0-snapshot.v20260310165744 || 3.2.1-canary.v20260311015003 - 3.2.1-snapshot.v20260320211535 || 3.2.2-canary.v20260317165823 - 3.2.2-canary.v20260320105540 || 3.2.3-canary.v20260320124654 - 3.2.3-snapshot.v20260327200941 || 3.2.4-canary.v20260325192814 - 3.2.4-snapshot.v20260331162920 || 3.2.5-canary.v20260401005640 - 3.2.7-canary.v20260407012548 || 3.2.8-canary.v20260407013936 - 3.2.8-snapshot.v20260408154640 || 3.2.9-canary.v20260408184934 - 3.2.9-snapshot.v20260413190318 || 3.2.10-canary.v20260413184503 - 3.2.10-snapshot.v20260414205636 || 3.2.11-canary.v20260414213403 - 3.2.11-canary.v20260415142102 || 3.2.12-canary.v20260415142548 - 3.2.12-snapshot.v20260416221307 || 3.2.13-canary.v20260416174321 - 3.2.13-canary.v20260417194309 || 3.2.14-canary.v20260417200155 - 3.2.14-snapshot.v20260421194054 || 3.2.15-canary.v20260422163039 - 3.3.0-canary.v20260422165959 || 3.3.1-canary.v20260422213819 - 3.4.0-canary.v20260424215946 || 3.4.1-canary.v20260424223357 - 3.4.1-canary.v20260425023419 || 3.4.2-canary.v20260425025027 - 3.4.2-snapshot.v20260429150611 || 3.4.3-canary.v20260429155628 - 3.4.3-canary.v20260430175623 || 3.4.4-canary.v20260430183935 - 3.4.4-canary.v20260501062222 || 3.4.5-canary.v20260501153259 - 3.4.5-snapshot.v20260501171802 || 3.4.6-canary.v20260505194523 - 3.4.6-canary.v20260506230029 || 3.4.7-canary.v20260507023520 - 3.4.7-snapshot.v20260508180306 || 3.4.8-canary.v20260508190534 - 3.4.8-snapshot.v20260513155808 || 3.4.9-canary.v20260514171305 - 3.4.9-snapshot.v20260515233846 || 3.4.10-canary.v20260515235351 - 3.4.10-snapshot.v20260522175603 || 3.4.11-canary.v20260518160549 - 3.4.11-canary.v20260518191051 || 3.4.12-canary.v20260518192440 - 3.4.12-snapshot.v20260527161602 || 3.4.13-canary.v20260521140614 - 3.4.13-canary.v20260522193509 || 3.4.15-canary.v20260527214303 - 3.5.0-snapshot.v20260520220646 || 3.6.1-canary.v20260610135056 - 3.6.1-canary.v20260610150055",
+      "nodes": [
+        "node_modules/@clerk/backend"
+      ],
+      "fixAvailable": {
+        "name": "@clerk/clerk-sdk-node",
+        "version": "5.1.6",
+        "isSemVerMajor": true
+      }
+    },
+    "@clerk/clerk-sdk-node": {
+      "name": "@clerk/clerk-sdk-node",
+      "severity": "high",
+      "isDirect": true,
+      "via": [
+        "@clerk/backend",
+        "@clerk/shared"
+      ],
+      "effects": [],
+      "range": ">=4.10.16-snapshot.27b5e0a",
+      "nodes": [
+        "node_modules/@clerk/clerk-sdk-node"
+      ],
+      "fixAvailable": {
+        "name": "@clerk/clerk-sdk-node",
+        "version": "5.1.6",
+        "isSemVerMajor": true
+      }
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 6,
+      "moderate": 16,
+      "high": 16,
+      "critical": 2,
+      "total": 40
+    },
+    "dependencies": {
+      "prod": 53,
+      "dev": 659,
+      "optional": 29,
+      "peer": 48,
+      "peerOptional": 0,
+      "total": 711
+    }
+  }
+}

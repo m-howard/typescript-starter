@@ -1,0 +1,47 @@
+{
+  "lodash": {
+    "current": "4.17.21",
+    "wanted": "4.18.1",
+    "latest": "4.18.1",
+    "dependent": "typescript-starter",
+    "location": "node_modules/lodash",
+    "type": "dependencies",
+    "homepage": "https://lodash.com/"
+  },
+  "typescript": {
+    "current": "5.8.3",
+    "wanted": "5.9.3",
+    "latest": "7.0.2",
+    "dependent": "typescript-starter",
+    "location": "node_modules/typescript",
+    "type": "devDependencies",
+    "homepage": "https://www.typescriptlang.org/"
+  },
+  "jest": {
+    "current": "29.7.0",
+    "wanted": "29.7.0",
+    "latest": "30.5.1",
+    "dependent": "typescript-starter",
+    "location": "node_modules/jest",
+    "type": "devDependencies",
+    "homepage": "https://jestjs.io/"
+  },
+  "eslint": {
+    "current": "9.29.0",
+    "wanted": "9.39.5",
+    "latest": "10.10.0",
+    "dependent": "typescript-starter",
+    "location": "node_modules/eslint",
+    "type": "devDependencies",
+    "homepage": "https://eslint.org"
+  },
+  "@types/node": {
+    "current": "22.15.32",
+    "wanted": "22.20.2",
+    "latest": "22.20.2",
+    "dependent": "typescript-starter",
+    "location": "node_modules/@types/node",
+    "type": "devDependencies",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node"
+  }
+}
